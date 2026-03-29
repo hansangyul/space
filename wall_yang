@@ -3,1128 +3,1719 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interactive Solar Physics Lab v2</title>
+<title>☀ Solar Physics Lab — Interactive</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@200;400;700&display=swap');
+:root{
+  --c1:#00c8ff;--c1a:rgba(0,200,255,.12);--c1b:rgba(0,200,255,.06);
+  --c2:#00ff88;--cr:#ff4444;--cw:#ffaa00;--cp:#a855ff;
+  --bg:rgba(0,3,18,.96);--bga:rgba(0,3,18,.88);
+  --border:rgba(0,200,255,.12);--border2:rgba(0,200,255,.06);
+  --txt:rgba(0,200,255,.55);--txt2:rgba(0,200,255,.35);
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Exo 2',sans-serif;}
-#c{display:block;width:100%;height:100%;cursor:grab;}
-#c:active{cursor:grabbing;}
+#c{position:fixed;inset:0;display:block;width:100%;height:100%;}
 
-#hud-top{position:fixed;top:0;left:0;right:0;height:50px;background:linear-gradient(to bottom,rgba(0,3,18,.96),transparent);display:flex;align-items:center;justify-content:space-between;padding:0 22px;z-index:100;pointer-events:none;border-bottom:1px solid rgba(0,200,255,.07);}
-.hud-logo{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:#00c8ff;letter-spacing:5px;text-transform:uppercase;text-shadow:0 0 18px rgba(0,200,255,.5);}
-.hud-center{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:rgba(0,200,255,.45);letter-spacing:2px;display:flex;gap:24px;}
-.hud-right{display:flex;align-items:center;gap:12px;}
-.live-dot{width:5px;height:5px;border-radius:50%;background:#00ff88;box-shadow:0 0 5px #00ff88;animation:blink 1.8s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.live-txt{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:rgba(0,255,136,.6);letter-spacing:2px;}
+/* ────── TOP HUD ────── */
+#hud{position:fixed;top:0;left:0;right:0;height:46px;z-index:500;pointer-events:none;
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  background:linear-gradient(to bottom,rgba(0,3,18,.98) 55%,transparent);
+  border-bottom:1px solid var(--border2);}
+.hl{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:700;color:var(--c1);
+  letter-spacing:5px;text-shadow:0 0 16px rgba(0,200,255,.5);pointer-events:all;cursor:pointer;}
+.hc{display:flex;gap:18px;font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--txt);letter-spacing:2px;}
+.hr{display:flex;align-items:center;gap:10px;}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--c2);box-shadow:0 0 5px var(--c2);animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.ltxt{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:rgba(0,255,136,.5);letter-spacing:2px;}
 
-/* ── SIDEBAR ── */
-#sidebar{position:fixed;right:0;top:0;bottom:0;width:350px;background:rgba(0,3,18,.97);border-left:1px solid rgba(0,200,255,.14);transform:translateX(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);z-index:50;display:flex;flex-direction:column;backdrop-filter:blur(24px);}
-#sidebar.open{transform:translateX(0);}
-.sb-hdr{padding:16px 18px 0;border-bottom:1px solid rgba(0,200,255,.09);}
-.sb-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.sb-namerow{display:flex;align-items:center;gap:10px;}
-.sb-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
-.sb-name{font-family:'Rajdhani',sans-serif;font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:2px;}
-.sb-en{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:rgba(0,200,255,.55);letter-spacing:3px;margin-top:2px;}
-#sb-close{width:26px;height:26px;background:rgba(0,200,255,.07);border:1px solid rgba(0,200,255,.22);color:#00c8ff;border-radius:2px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-#sb-close:hover{background:rgba(0,200,255,.18);}
-.sb-tabs{display:flex;}
-.sbt{flex:1;font-family:'Share Tech Mono',monospace;font-size:.55rem;letter-spacing:1px;text-transform:uppercase;padding:9px 4px;background:none;border:none;color:rgba(0,200,255,.3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
-.sbt.on,.sbt:hover{color:#00c8ff;border-bottom-color:#00c8ff;}
-.sb-body{flex:1;overflow-y:auto;padding:12px 16px;}
-.sb-body::-webkit-scrollbar{width:2px;}
-.sb-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.18);}
+/* ────── LOCK-ON BANNER ────── */
+#lockbanner{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:500;
+  display:flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:3px;color:var(--c1);
+  background:rgba(0,200,255,.07);border:1px solid rgba(0,200,255,.22);
+  border-radius:2px;padding:5px 16px;pointer-events:none;
+  opacity:0;transition:opacity .4s;white-space:nowrap;}
+#lockbanner.on{opacity:1;}
+.lock-icon{font-size:.75rem;}
+
+/* ────── PLANET LIST (left) ────── */
+#plist{position:fixed;left:0;top:46px;bottom:0;width:190px;z-index:400;
+  background:var(--bg);border-right:1px solid var(--border);
+  backdrop-filter:blur(22px);display:flex;flex-direction:column;overflow:hidden;}
+.pl-hdr{padding:12px 14px 10px;border-bottom:1px solid var(--border2);}
+.pl-title{font-family:'Share Tech Mono',monospace;font-size:.5rem;letter-spacing:3px;color:var(--txt2);margin-bottom:2px;}
+.pl-sub{font-size:.58rem;color:rgba(0,200,255,.4);}
+.pl-body{flex:1;overflow-y:auto;padding:6px 0;}
+.pl-body::-webkit-scrollbar{width:2px;}
+.pl-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.15);}
+.pl-sect{font-family:'Share Tech Mono',monospace;font-size:.46rem;letter-spacing:3px;
+  color:var(--txt2);padding:8px 14px 4px;opacity:.7;}
+.pl-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;
+  transition:background .18s;border-left:2px solid transparent;}
+.pl-item:hover{background:var(--c1a);}
+.pl-item.active{background:var(--c1a);border-left-color:var(--c1);}
+.pl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.pl-info{flex:1;min-width:0;}
+.pl-name{font-family:'Rajdhani',sans-serif;font-size:.75rem;font-weight:600;color:#d8f0ff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pl-sub2{font-family:'Share Tech Mono',monospace;font-size:.46rem;color:var(--txt2);}
+.pl-moon{padding:5px 14px 5px 28px;}
+.pl-moon .pl-name{font-size:.68rem;color:rgba(200,230,240,.7);}
+
+/* ────── LIVE DATA PANEL (center-left, appears on lock) ────── */
+#livepanel{position:fixed;left:190px;top:46px;width:200px;z-index:400;
+  background:var(--bga);border-right:1px solid var(--border);
+  backdrop-filter:blur(18px);
+  transform:translateX(-200px);transition:transform .38s cubic-bezier(.16,1,.3,1);
+  display:flex;flex-direction:column;bottom:0;}
+#livepanel.on{transform:translateX(0);}
+.lv-hdr{padding:10px 13px 8px;border-bottom:1px solid var(--border2);}
+.lv-tag{font-family:'Share Tech Mono',monospace;font-size:.46rem;letter-spacing:3px;color:var(--txt2);}
+.lv-name{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:#fff;letter-spacing:2px;}
+.lv-en{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:rgba(0,200,255,.5);letter-spacing:2px;}
+.lv-body{flex:1;overflow-y:auto;padding:9px 12px;}
+.lv-body::-webkit-scrollbar{width:2px;}
+.lv-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.13);}
+.lrow{display:flex;justify-content:space-between;align-items:baseline;
+  padding:4px 0;border-bottom:1px solid var(--border2);}
+.lk{font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--txt2);}
+.lval{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:#c8f0ff;}
+.lval.b{color:var(--c1);}.lval.r{color:var(--cr);}.lval.w{color:var(--cw);}.lval.g{color:var(--c2);}
+.lsec{font-family:'Share Tech Mono',monospace;font-size:.45rem;letter-spacing:3px;
+  color:var(--txt2);margin:7px 0 4px;border-top:1px solid var(--border2);padding-top:5px;}
+.lbar-wrap{margin:4px 0;}
+.lbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.lbar-k{font-family:'Share Tech Mono',monospace;font-size:.46rem;color:var(--txt2);}
+.lbar-v{font-family:'Share Tech Mono',monospace;font-size:.46rem;color:var(--c1);}
+.lbar{height:3px;background:rgba(0,200,255,.09);border-radius:2px;overflow:hidden;margin-bottom:3px;}
+.lbar-f{height:100%;border-radius:2px;transition:width .3s ease;}
+
+/* ────── SIM PANEL (right) ────── */
+#simpanel{position:fixed;right:0;top:46px;bottom:0;width:310px;z-index:400;
+  background:var(--bg);border-left:1px solid var(--border);
+  backdrop-filter:blur(22px);display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .38s cubic-bezier(.16,1,.3,1);}
+#simpanel.on{transform:translateX(0);}
+.sp-hdr{padding:12px 16px 0;border-bottom:1px solid var(--border2);}
+.sp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sp-nr{display:flex;align-items:center;gap:9px;}
+.sp-dot{width:10px;height:10px;border-radius:50%;}
+.sp-name{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:2px;}
+.sp-en{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:rgba(0,200,255,.5);letter-spacing:3px;margin-top:1px;}
+#spc{width:24px;height:24px;background:var(--c1b);border:1px solid rgba(0,200,255,.2);
+  color:var(--c1);border-radius:2px;cursor:pointer;font-size:.78rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;}
+#spc:hover{background:var(--c1a);}
+.sp-tabs{display:flex;border-bottom:1px solid var(--border2);}
+.sptab{flex:1;font-family:'Share Tech Mono',monospace;font-size:.5rem;letter-spacing:1px;
+  text-transform:uppercase;padding:8px 4px;background:none;border:none;
+  color:rgba(0,200,255,.28);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;}
+.sptab.on,.sptab:hover{color:var(--c1);border-bottom-color:var(--c1);}
+.sp-body{flex:1;overflow-y:auto;padding:11px 15px;}
+.sp-body::-webkit-scrollbar{width:2px;}
+.sp-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.13);}
 
 /* data */
-.dr{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(0,200,255,.045);}
-.dk{font-family:'Share Tech Mono',monospace;font-size:.56rem;color:rgba(0,200,255,.38);letter-spacing:1px;}
-.dv{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#d8f4ff;text-align:right;}
-.dv.b{color:#00c8ff;} .dv.w{color:#ffaa00;} .dv.r{color:#ff4040;} .dv.g{color:#00ff88;}
-.sd{font-family:'Share Tech Mono',monospace;font-size:.52rem;letter-spacing:3px;color:#00c8ff;margin:11px 0 7px;display:flex;align-items:center;gap:6px;}
-.sd::after{content:'';flex:1;height:1px;background:rgba(0,200,255,.13);}
-.pt{font-size:.63rem;color:rgba(0,200,255,.48);line-height:1.7;margin-bottom:6px;}
-
-/* phys boxes */
-.pg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0;}
-.pb{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.09);border-radius:3px;padding:9px;}
-.pl{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:rgba(0,200,255,.38);margin-bottom:3px;}
-.pv{font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:600;color:#00c8ff;}
-.pu{font-family:'Share Tech Mono',monospace;font-size:.48rem;color:rgba(0,200,255,.35);}
+.dr{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--border2);}
+.dk{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--txt2);}
+.dv{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:#d0f0ff;text-align:right;}
+.dv.b{color:var(--c1);}.dv.r{color:var(--cr);}.dv.w{color:var(--cw);}.dv.g{color:var(--c2);}
+.sd{font-family:'Share Tech Mono',monospace;font-size:.48rem;letter-spacing:3px;color:var(--c1);
+  margin:10px 0 6px;display:flex;align-items:center;gap:5px;}
+.sd::after{content:'';flex:1;height:1px;background:rgba(0,200,255,.1);}
+.pt{font-size:.6rem;color:rgba(0,200,255,.42);line-height:1.65;margin-bottom:4px;}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;}
+.pb{background:var(--c1b);border:1px solid var(--border2);border-radius:3px;padding:8px;}
+.pbl{font-family:'Share Tech Mono',monospace;font-size:.46rem;color:var(--txt2);margin-bottom:2px;}
+.pbv{font-family:'Rajdhani',sans-serif;font-size:.88rem;font-weight:600;color:var(--c1);}
+.pbu{font-family:'Share Tech Mono',monospace;font-size:.44rem;color:var(--txt2);}
 
 /* sliders */
-.slb{margin-bottom:13px;}
-.slh{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
-.sll{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:rgba(0,200,255,.55);letter-spacing:1px;}
-.slv{font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:600;color:#00c8ff;}
-input[type=range]{width:100%;-webkit-appearance:none;height:2px;background:rgba(0,200,255,.14);border-radius:1px;outline:none;margin:3px 0;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#00c8ff;cursor:pointer;box-shadow:0 0 7px rgba(0,200,255,.8);}
-.sld{font-size:.6rem;color:rgba(0,200,255,.3);line-height:1.55;margin-top:2px;}
+.slb{margin-bottom:12px;}
+.slh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.sll{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:rgba(0,200,255,.5);}
+.slv{font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:600;color:var(--c1);}
+input[type=range]{width:100%;-webkit-appearance:none;height:2px;background:rgba(0,200,255,.13);
+  border-radius:1px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;
+  border-radius:50%;background:var(--c1);cursor:pointer;box-shadow:0 0 7px rgba(0,200,255,.8);}
+.sld{font-size:.56rem;color:var(--txt2);line-height:1.5;margin-top:2px;}
 
 /* mini canvases */
-.fcw{margin:8px 0;border:1px solid rgba(0,200,255,.09);border-radius:3px;overflow:hidden;background:rgba(0,0,8,.7);}
-.fcl{font-family:'Share Tech Mono',monospace;font-size:.5rem;letter-spacing:2px;color:rgba(0,200,255,.38);padding:4px 7px;border-bottom:1px solid rgba(0,200,255,.06);}
-.fc{display:block;width:100%;height:90px;}
+.fcw{margin:7px 0;border:1px solid var(--border2);border-radius:3px;overflow:hidden;background:rgba(0,0,8,.8);}
+.fcl{font-family:'Share Tech Mono',monospace;font-size:.46rem;letter-spacing:2px;
+  color:var(--txt2);padding:4px 7px;border-bottom:1px solid var(--border2);}
+.fc{display:block;width:100%;height:82px;}
 
-/* tidal special */
-.tp{background:rgba(255,140,0,.04);border:1px solid rgba(255,140,0,.14);border-radius:3px;padding:11px;margin-top:8px;}
-.tt{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:#ffaa00;letter-spacing:2px;margin-bottom:8px;}
+/* tidal */
+.tp{background:rgba(255,140,0,.03);border:1px solid rgba(255,140,0,.12);
+  border-radius:3px;padding:9px;margin-top:6px;}
+.tt{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--cw);letter-spacing:2px;margin-bottom:6px;}
+.ml{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+.mc{display:inline-flex;align-items:center;gap:4px;background:var(--c1b);
+  border:1px solid var(--border);border-radius:2px;padding:3px 7px;
+  font-family:'Share Tech Mono',monospace;font-size:.5rem;color:rgba(0,200,255,.62);
+  cursor:pointer;transition:all .18s;}
+.mc:hover{background:var(--c1a);color:#fff;}
+.mcd{width:5px;height:5px;border-radius:50%;}
 
-/* moon list */
-.ml{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
-.mc{display:inline-flex;align-items:center;gap:5px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.13);border-radius:2px;padding:4px 8px;font-family:'Share Tech Mono',monospace;font-size:.56rem;color:rgba(0,200,255,.7);cursor:pointer;transition:all .2s;}
-.mc:hover{background:rgba(0,200,255,.13);color:#fff;}
-.md{width:5px;height:5px;border-radius:50%;}
+/* ────── HELP OVERLAY ────── */
+#help{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);z-index:450;
+  background:rgba(0,3,18,.82);border:1px solid var(--border);border-radius:4px;
+  backdrop-filter:blur(14px);padding:10px 20px;pointer-events:none;
+  transition:opacity .4s;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.hk{display:flex;align-items:center;gap:6px;}
+.hkey{font-family:'Share Tech Mono',monospace;font-size:.52rem;
+  background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.25);
+  border-radius:2px;padding:2px 6px;color:var(--c1);}
+.hdesc{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--txt2);}
+#help-toggle{position:fixed;bottom:42px;right:16px;z-index:460;
+  font-family:'Share Tech Mono',monospace;font-size:.55rem;letter-spacing:2px;
+  background:var(--c1b);border:1px solid var(--border);border-radius:2px;
+  color:var(--c1);padding:5px 10px;cursor:pointer;transition:all .2s;}
+#help-toggle:hover{background:var(--c1a);}
 
-#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:38px;background:linear-gradient(to top,rgba(0,3,18,.95),transparent);display:flex;align-items:center;justify-content:space-between;padding:0 22px;z-index:100;pointer-events:none;}
-.bb{font-family:'Share Tech Mono',monospace;font-size:.56rem;color:rgba(0,200,255,.3);letter-spacing:1px;}
-#stime{color:rgba(0,200,255,.55);}
+/* ────── BOTTOM BAR ────── */
+#bot{position:fixed;bottom:0;left:0;right:0;height:38px;z-index:500;pointer-events:none;
+  background:linear-gradient(to top,rgba(0,3,18,.95) 55%,transparent);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  border-top:1px solid var(--border2);}
+.btxt{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--txt2);letter-spacing:1px;}
 
-#focus-lbl{position:fixed;top:58px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:300;color:rgba(0,200,255,.65);letter-spacing:8px;text-transform:uppercase;pointer-events:none;z-index:100;opacity:0;transition:opacity .5s;text-shadow:0 0 28px rgba(0,200,255,.4);}
-#focus-lbl.on{opacity:1;}
+/* ────── TOOLTIP ────── */
+#tip{position:fixed;pointer-events:none;z-index:600;background:rgba(0,3,18,.94);
+  border:1px solid rgba(0,200,255,.28);border-radius:2px;padding:7px 11px;
+  font-family:'Share Tech Mono',monospace;font-size:.58rem;color:#d0f0ff;
+  letter-spacing:1px;opacity:0;transition:opacity .1s;max-width:220px;}
 
-#xhair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:90;opacity:0;transition:opacity .35s;}
-#xhair.on{opacity:1;}
-.xr1{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,200,255,.45);animation:xspin 4s linear infinite;}
-.xr2{position:absolute;top:5px;left:5px;width:26px;height:26px;border-radius:50%;border:1px dashed rgba(0,200,255,.25);animation:xspin 7s linear infinite reverse;}
-@keyframes xspin{to{transform:rotate(360deg)}}
+/* ────── SCANLINES ────── */
+#scl{position:fixed;inset:0;pointer-events:none;z-index:1000;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.022) 0,rgba(0,0,0,.022) 1px,transparent 1px,transparent 4px);}
 
-#tip{position:fixed;pointer-events:none;z-index:200;background:rgba(0,3,18,.93);border:1px solid rgba(0,200,255,.28);border-radius:2px;padding:7px 11px;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:#d8f4ff;letter-spacing:1px;opacity:0;transition:opacity .1s;max-width:200px;}
+/* help hide */
+.help-hidden{opacity:0!important;}
+#intro{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%, rgba(0,30,60,.98) 0%, rgba(0,3,18,1) 70%);
+  transition:opacity .8s ease;}
+#intro.hidden{opacity:0;pointer-events:none;}
+.intro-stars{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.intro-star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) infinite var(--del,0s);}
+@keyframes twinkle{0%,100%{opacity:.1}50%{opacity:1}}
+.intro-logo{font-family:'Rajdhani',sans-serif;font-size:clamp(2rem,6vw,4.5rem);font-weight:700;
+  color:#fff;letter-spacing:6px;text-align:center;margin-bottom:8px;
+  text-shadow:0 0 40px rgba(0,200,255,.6),0 0 80px rgba(0,200,255,.2);}
+.intro-logo span{color:var(--c1);}
+.intro-sub{font-family:'Share Tech Mono',monospace;font-size:clamp(.6rem,1.5vw,.85rem);
+  color:rgba(0,200,255,.55);letter-spacing:5px;text-align:center;margin-bottom:60px;}
+.intro-btns{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.intro-btn{font-family:'Rajdhani',sans-serif;font-size:1.15rem;font-weight:600;
+  letter-spacing:3px;padding:15px 42px;border-radius:3px;cursor:pointer;
+  transition:all .25s;text-transform:uppercase;border:none;}
+.intro-btn-primary{background:linear-gradient(135deg,var(--c1),#0088cc);color:#000;
+  box-shadow:0 0 30px rgba(0,200,255,.45),0 4px 20px rgba(0,0,0,.4);}
+.intro-btn-primary:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(0,200,255,.7),0 8px 30px rgba(0,0,0,.5);}
+.intro-btn-secondary{background:transparent;color:var(--c1);
+  border:1px solid rgba(0,200,255,.45);
+  box-shadow:0 0 15px rgba(0,200,255,.15);}
+.intro-btn-secondary:hover{background:rgba(0,200,255,.1);border-color:var(--c1);
+  transform:translateY(-3px);box-shadow:0 0 30px rgba(0,200,255,.3);}
+.intro-note{font-family:'Share Tech Mono',monospace;font-size:.55rem;
+  color:rgba(0,200,255,.25);letter-spacing:2px;margin-top:40px;text-align:center;}
 
-#scanl{position:fixed;inset:0;pointer-events:none;z-index:999;background:repeating-linear-gradient(0deg,rgba(0,0,0,.03) 0px,rgba(0,0,0,.03) 1px,transparent 1px,transparent 4px);}
+/* ────── ENCYCLOPEDIA MODAL ────── */
+#encyc{position:fixed;inset:0;z-index:1900;display:flex;
+  background:rgba(0,3,18,.96);backdrop-filter:blur(24px);
+  transition:opacity .4s;opacity:0;pointer-events:none;}
+#encyc.on{opacity:1;pointer-events:all;}
+.enc-left{width:240px;flex-shrink:0;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;background:rgba(0,5,22,.8);}
+.enc-lhdr{padding:20px 18px 12px;border-bottom:1px solid var(--border2);}
+.enc-title{font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;
+  color:var(--c1);letter-spacing:4px;margin-bottom:4px;}
+.enc-sub2{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--txt2);}
+.enc-list{flex:1;overflow-y:auto;padding:8px 0;}
+.enc-list::-webkit-scrollbar{width:2px;}
+.enc-list::-webkit-scrollbar-thumb{background:rgba(0,200,255,.2);}
+.enc-item{display:flex;align-items:center;gap:10px;padding:10px 18px;
+  cursor:pointer;transition:all .18s;border-left:2px solid transparent;}
+.enc-item:hover{background:var(--c1a);border-left-color:rgba(0,200,255,.4);}
+.enc-item.sel{background:var(--c1a);border-left-color:var(--c1);}
+.enc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.enc-iname{font-family:'Rajdhani',sans-serif;font-size:.88rem;font-weight:600;color:#d8f0ff;}
+.enc-ien{font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--txt2);}
+.enc-right{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.enc-rhdr{display:flex;align-items:center;justify-content:space-between;
+  padding:18px 28px;border-bottom:1px solid var(--border2);}
+.enc-pname{font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;
+  color:#fff;letter-spacing:3px;}
+.enc-pen{font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  color:var(--c1);letter-spacing:4px;margin-top:2px;}
+.enc-close{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:2px;
+  background:var(--c1b);border:1px solid var(--border);color:var(--c1);
+  padding:7px 14px;border-radius:2px;cursor:pointer;transition:all .2s;}
+.enc-close:hover{background:var(--c1a);}
+.enc-body{flex:1;overflow-y:auto;padding:24px 28px;}
+.enc-body::-webkit-scrollbar{width:3px;}
+.enc-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.2);}
+.enc-section{margin-bottom:22px;}
+.enc-sh{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:3px;
+  color:var(--c1);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.enc-sh::after{content:'';flex:1;height:1px;background:rgba(0,200,255,.15);}
+.enc-txt{font-size:.82rem;color:rgba(200,228,242,.75);line-height:1.85;}
+.enc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+.enc-box{background:rgba(0,200,255,.04);border:1px solid var(--border2);
+  border-radius:3px;padding:11px 13px;}
+.enc-bl{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--txt2);margin-bottom:3px;}
+.enc-bv{font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:600;color:var(--c1);}
+.enc-bu{font-family:'Share Tech Mono',monospace;font-size:.46rem;color:var(--txt2);}
+.enc-badge{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:.52rem;
+  padding:3px 9px;border-radius:2px;margin:3px 3px 0 0;}
+.enc-badge-b{background:rgba(0,200,255,.1);color:var(--c1);border:1px solid rgba(0,200,255,.25);}
+.enc-badge-r{background:rgba(255,68,68,.08);color:#ff6666;border:1px solid rgba(255,68,68,.25);}
+.enc-badge-g{background:rgba(0,255,136,.08);color:var(--c2);border:1px solid rgba(0,255,136,.25);}
+.enc-badge-w{background:rgba(255,170,0,.08);color:var(--cw);border:1px solid rgba(255,170,0,.25);}
+.enc-go{font-family:'Rajdhani',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--c1),#0088cc);color:#000;border:none;
+  padding:10px 24px;border-radius:2px;cursor:pointer;margin-top:16px;
+  transition:all .2s;text-transform:uppercase;}
+.enc-go:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,200,255,.4);}
+.enc-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--txt2);text-align:center;gap:12px;}
+.enc-placeholder-icon{font-size:3rem;opacity:.3;}
+.enc-placeholder-txt{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:3px;}
+
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="scanl"></div>
-<div id="hud-top">
-  <div class="hud-logo">Solar Physics <span style="opacity:.4">//</span> Lab</div>
-  <div class="hud-center">
-    <span id="hbodies">BODIES: —</span>
-    <span id="hfps">— FPS</span>
-    <span>WEBGL · THREE.JS r128</span>
+<div id="scl"></div>
+
+<!-- ═══ INTRO SCREEN ═══ -->
+<div id="intro">
+  <div class="intro-stars" id="istars"></div>
+  <div class="intro-logo">☀ SOLAR PHYSICS<br><span>LAB</span></div>
+  <div class="intro-sub">INTERACTIVE SOLAR SYSTEM EXPLORER · NASA JPL DATA</div>
+  <div class="intro-btns">
+    <button class="intro-btn intro-btn-primary" onclick="startExplore()">🚀 탐험 시작!</button>
+    <button class="intro-btn intro-btn-secondary" onclick="openEncyc()">📚 백과사전</button>
   </div>
-  <div class="hud-right">
-    <div class="live-dot"></div>
-    <div class="live-txt">SIM LIVE</div>
-  </div>
+  <div class="intro-note">수성 · 금성 · 화성 · 목성 · 토성 · 천왕성 · 해왕성 + 전체 위성 시스템</div>
 </div>
-<div id="focus-lbl"></div>
-<div id="xhair"><div class="xr1"><div class="xr2"></div></div></div>
-<div id="sidebar">
-  <div class="sb-hdr">
-    <div class="sb-top">
-      <div class="sb-namerow">
-        <div class="sb-dot" id="sbdot"></div>
-        <div><div class="sb-name" id="sbname">—</div><div class="sb-en" id="sben">—</div></div>
+
+<!-- ═══ ENCYCLOPEDIA MODAL ═══ -->
+<div id="encyc">
+  <div class="enc-left">
+    <div class="enc-lhdr">
+      <div class="enc-title">백과사전</div>
+      <div class="enc-sub2">행성을 선택하세요</div>
+    </div>
+    <div class="enc-list" id="enclist"></div>
+  </div>
+  <div class="enc-right">
+    <div class="enc-rhdr">
+      <div>
+        <div class="enc-pname" id="encpname">행성을 선택하세요</div>
+        <div class="enc-pen" id="encpen">SOLAR SYSTEM ENCYCLOPEDIA</div>
       </div>
-      <button id="sb-close" onclick="closeSB()">✕</button>
+      <button class="enc-close" onclick="closeEncyc()">✕ 닫기</button>
     </div>
-    <div class="sb-tabs">
-      <button class="sbt on" onclick="swTab('info',this)">📋 정보</button>
-      <button class="sbt" onclick="swTab('sim',this)">⚡ 시뮬</button>
-      <button class="sbt" onclick="swTab('phys',this)">🔬 물리</button>
+    <div class="enc-body" id="encbody">
+      <div class="enc-placeholder">
+        <div class="enc-placeholder-icon">🌌</div>
+        <div class="enc-placeholder-txt">왼쪽 목록에서 행성을 선택하세요</div>
+      </div>
     </div>
   </div>
-  <div class="sb-body" id="sbbody"></div>
 </div>
-<div id="bottom-bar">
-  <div class="bb">클릭: 행성·위성 포커스 · 드래그: 회전 · 스크롤: 줌</div>
-  <div class="bb">경과: <span id="stime">T+0.00yr</span></div>
-  <div class="bb">NASA JPL 물리 데이터</div>
+
+<!-- TOP HUD -->
+<div id="hud">
+  <div class="hl" onclick="resetCamera()" title="클릭: 전체 뷰로 초기화">☀ SOLAR PHYSICS LAB</div>
+  <div class="hc">
+    <span id="hbod">—</span>
+    <span id="hfps">— FPS</span>
+    <span id="htime">T+0.00yr</span>
+    <span id="htrack" style="color:rgba(0,255,136,.5)">FREE CAM</span>
+  </div>
+  <div class="hr"><div class="ldot"></div><div class="ltxt">SIMULATION LIVE</div></div>
 </div>
+
+<!-- LOCK-ON BANNER -->
+<div id="lockbanner">
+  <span class="lock-icon">🔒</span>
+  <span>TRACKING: </span><span id="lbn" style="color:#fff;font-weight:600">—</span>
+  <span style="opacity:.5;margin-left:8px">[ESC: 해제]</span>
+</div>
+
+<!-- PLANET LIST (LEFT PANEL — always visible) -->
+<div id="plist">
+  <div class="pl-hdr">
+    <div class="pl-title">CELESTIAL BODIES</div>
+    <div class="pl-sub" style="font-size:.56rem;color:rgba(0,200,255,.38)">클릭 → 추적 + 정보</div>
+  </div>
+  <div class="pl-body" id="plbody"></div>
+</div>
+
+<!-- LIVE DATA PANEL -->
+<div id="livepanel">
+  <div class="lv-hdr">
+    <div class="lv-tag">TRACKING TARGET</div>
+    <div class="lv-name" id="lvname">—</div>
+    <div class="lv-en" id="lven">—</div>
+  </div>
+  <div class="lv-body" id="lvbody"></div>
+</div>
+
+<!-- SIM PANEL (RIGHT) -->
+<div id="simpanel">
+  <div class="sp-hdr">
+    <div class="sp-top">
+      <div class="sp-nr">
+        <div class="sp-dot" id="spdot"></div>
+        <div>
+          <div class="sp-name" id="spname">—</div>
+          <div class="sp-en" id="spen">—</div>
+        </div>
+      </div>
+      <button id="spc" onclick="closeSP()">✕</button>
+    </div>
+    <div class="sp-tabs">
+      <button class="sptab on" onclick="swTab('info',this)">📋 정보</button>
+      <button class="sptab" onclick="swTab('sim',this)">⚡ 시뮬</button>
+      <button class="sptab" onclick="swTab('phys',this)">🔬 물리</button>
+    </div>
+  </div>
+  <div class="sp-body" id="spbody"></div>
+</div>
+
+<!-- HELP OVERLAY -->
+<div id="help">
+  <div class="hk"><span class="hkey">클릭</span><span class="hdesc">천체 선택·추적</span></div>
+  <div class="hk"><span class="hkey">드래그</span><span class="hdesc">회전</span></div>
+  <div class="hk"><span class="hkey">스크롤</span><span class="hdesc">줌 인/아웃</span></div>
+  <div class="hk"><span class="hkey">ESC</span><span class="hdesc">추적 해제</span></div>
+  <div class="hk"><span class="hkey">리스트</span><span class="hdesc">좌측 클릭</span></div>
+  <div class="hk"><span class="hkey">☀ 로고</span><span class="hdesc">전체 뷰</span></div>
+</div>
+<button id="help-toggle" onclick="toggleHelp()">? 도움말</button>
+
+<!-- BOTTOM -->
+<div id="bot">
+  <div class="btxt" id="bscale">LOG SCALE · 35,000 STARS</div>
+  <div class="btxt">NASA JPL 물리 데이터 기반</div>
+  <div class="btxt">경과: <span id="btime" style="color:rgba(0,200,255,.55)">T+0.00yr</span></div>
+</div>
+
 <div id="tip"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+'use strict';
 // ═══════════════════════════════════════════════════
-//  PHYSICS  (SI units)
+//  PHYSICS
 // ═══════════════════════════════════════════════════
-const G=6.674e-11, AU_M=1.496e11, SUN_M=1.989e30, L_SUN=3.828e26, SIGMA=5.67e-8;
-const surfG=(M,R)=>G*M/(R*R);
-const escV=(M,R,gmod=1)=>Math.sqrt(2*gmod*G*M/R);
-const sFlux=(d_au,rad=1)=>L_SUN*rad/(4*Math.PI*(d_au*AU_M)**2);
-const tEff=(d_au,A,rad=1)=>((sFlux(d_au,rad)*(1-A))/(4*SIGMA))**0.25;
+const G=6.674e-11, AU_M=1.496e11, SUN_M=1.989e30, L_SUN=3.828e26, SB=5.67e-8;
+const surfG=(M,R,gm=1)=>G*M*gm/(R*R);
+const escVel=(M,R,gm=1)=>Math.sqrt(2*gm*G*M/R)/1e3;
+const solFlux=(d,r=1)=>L_SUN*r/(4*Math.PI*(d*AU_M)**2);
+const effTemp=(d,A,r=1)=>(solFlux(d,r)*(1-A)/(4*SB))**0.25 - 273;
 const tidalF=(Mj,m,d,dr)=>2*G*Mj*m*dr/d**3;
 
 // ═══════════════════════════════════════════════════
-//  PLANET DATABASE
+//  LOG-SCALE ORBIT  (guarantees ≥14 unit gap between planets)
 // ═══════════════════════════════════════════════════
-const AU=16; // scene units per AU
+function logOrb(a){
+  // 실제 비율 반영한 충분한 간격
+  // mercury≈30  venus≈52  mars≈80
+  // jupiter≈140  saturn≈210  uranus≈290  neptune≈360
+  if(a<=0.45)  return 10 + a*44;                          // 수성 ≈ 30
+  if(a<=0.80)  return 30 + (a-0.45)*62;                   // 금성 ≈ 52
+  if(a<=1.70)  return 52 + (a-0.80)*32;                   // (지구 건너뜀)
+  if(a<=2.20)  return 81 + (a-1.70)*18;                   // 화성 ≈ 80
+  if(a<=6.50)  return 90 + (a-2.20)*11.6;                 // 목성 ≈ 140
+  if(a<=11.0)  return 140 + (a-6.50)*15.6;                // 토성 ≈ 210
+  if(a<=22.0)  return 210 + (a-11.0)*7.3;                 // 천왕성 ≈ 290
+  return        290 + (a-22.0)*4.4;                       // 해왕성 ≈ 362
+}
 
-const MOONS_DATA = {
-  mercury:[],
-  venus:[],
-  mars:[
-    {id:'phobos',   name:'포보스', en:'Phobos',   col:0x887766, size:.4, orb:1.8,  period:.319,  mass:1.06e16, radius:11.3e3, gravity:.0057, desc:'화성에 가장 가까운 위성. 100년 후 로슈 한계 진입 예정.'},
-    {id:'deimos',   name:'데이모스',en:'Deimos',   col:0x998877, size:.3, orb:2.4,  period:1.263, mass:1.48e15, radius:6.2e3,  gravity:.003,  desc:'화성 외위성. 매우 작고 어둡다.'},
-  ],
-  jupiter:[
-    {id:'io',       name:'이오',   en:'Io',       col:0xf5d870, size:1.0, orb:5.5,  period:1.769, mass:8.93e22, radius:1821e3, gravity:1.796, tidal:true, desc:'태양계 최강 화산활동. 목성 조석력으로 내부 마찰 가열.'},
-    {id:'europa',   name:'에우로파',en:'Europa',   col:0xddeeff, size:.85, orb:7.5,  period:3.552, mass:4.80e22, radius:1561e3, gravity:1.315, tidal:true, desc:'얼음 지각 아래 액체 바다. 생명체 후보지.'},
-    {id:'ganymede', name:'가니메데',en:'Ganymede', col:0xaaaacc, size:1.3, orb:10.5, period:7.155, mass:1.48e23, radius:2634e3, gravity:1.428, desc:'태양계 최대 위성. 자체 자기장 보유.'},
-    {id:'callisto', name:'칼리스토',en:'Callisto', col:0x776655, size:1.1, orb:14.5, period:16.69, mass:1.08e23, radius:2410e3, gravity:1.235, desc:'충돌구 가장 많은 위성. 지질활동 없음.'},
-  ],
-  saturn:[
-    {id:'mimas',     name:'미마스',    en:'Mimas',     col:0xbbbbcc, size:.35, orb:4.2,  period:.942,  mass:3.75e19, radius:198e3,  gravity:.064,  desc:'헤르셸 분화구(지름130km). Death Star 외형.'},
-    {id:'enceladus', name:'엔켈라두스',en:'Enceladus', col:0xeef8ff, size:.4,  orb:5.2,  period:1.37,  mass:1.08e20, radius:252e3,  gravity:.113,  desc:'남극 간헐천 분출. 지하 액체 바다 확인.'},
-    {id:'tethys',    name:'테티스',    en:'Tethys',    col:0xccddee, size:.55, orb:6.2,  period:1.888, mass:6.17e20, radius:531e3,  gravity:.146,  desc:'거의 순수 얼음 구성. 이타카 협곡(2000km).'},
-    {id:'dione',     name:'디오네',    en:'Dione',     col:0xbbccdd, size:.6,  orb:7.4,  period:2.737, mass:1.10e21, radius:561e3,  gravity:.232,  desc:'엔켈라두스와 2:1 공명. 지하 바다 가능성.'},
-    {id:'rhea',      name:'레아',      en:'Rhea',      col:0xaabbcc, size:.65, orb:9.0,  period:4.518, mass:2.31e21, radius:764e3,  gravity:.264,  desc:'토성 두 번째 큰 위성. 충돌구 포화.'},
-    {id:'titan',     name:'타이탄',    en:'Titan',     col:0xe8a030, size:1.2, orb:12.0, period:15.95, mass:1.35e23, radius:2575e3, gravity:1.352, desc:'메탄 호수·비. 기압 1.45bar. 두꺼운 질소 대기.'},
-    {id:'iapetus',   name:'이아페투스',en:'Iapetus',   col:0x887755, size:.7,  orb:17.0, period:79.32, mass:1.81e21, radius:734e3,  gravity:.223,  desc:'반구가 극명히 다른 색(밝음/어둠). 적도 산맥.'},
-  ],
-  uranus:[
-    {id:'miranda',  name:'미란다',  en:'Miranda',  col:0xaabbbb, size:.35, orb:3.5,  period:1.413, mass:6.59e19, radius:236e3,  gravity:.079,  desc:'태양계에서 가장 극단적인 지형. 20km 절벽.'},
-    {id:'ariel',    name:'아리엘',  en:'Ariel',    col:0xbbcccc, size:.55, orb:5.0,  period:2.52,  mass:1.35e21, radius:579e3,  gravity:.27,   desc:'천왕성 위성 중 가장 밝고 활동적 지형.'},
-    {id:'umbriel',  name:'움브리엘',en:'Umbriel',  col:0x666677, size:.5,  orb:6.5,  period:4.144, mass:1.17e21, radius:585e3,  gravity:.23,   desc:'가장 어두운 천왕성 위성. 오래된 표면.'},
-    {id:'titania',  name:'티타니아',en:'Titania',  col:0x99aaaa, size:.65, orb:8.5,  period:8.706, mass:3.53e21, radius:789e3,  gravity:.379,  desc:'천왕성 최대 위성. 협곡·절벽 다수.'},
-    {id:'oberon',   name:'오베론',  en:'Oberon',   col:0x887788, size:.6,  orb:11.0, period:13.46, mass:3.01e21, radius:761e3,  gravity:.346,  desc:'천왕성 두 번째 큰 위성. 충돌구 많음.'},
-  ],
-  neptune:[
-    {id:'proteus',  name:'프로테우스',en:'Proteus', col:0x505060, size:.45, orb:3.5,  period:1.122,  mass:4.4e19,  radius:210e3, gravity:.07,  desc:'불규칙 형태. 반사율 6%. Voyager 2 발견.'},
-    {id:'triton',   name:'트리톤',   en:'Triton',  col:0x88aacc, size:.85, orb:6.0,  period:-5.877, mass:2.14e22, radius:1354e3,gravity:.779, desc:'역행 궤도. 질소 간헐천. 36억년 후 로슈 한계.'},
-    {id:'nereid',   name:'네레이드', en:'Nereid',  col:0x667788, size:.3,  orb:14.0, period:360.14, mass:3.1e19,  radius:170e3, gravity:.071, desc:'이심률 0.75 — 태양계 최고 수준 위성.'},
-  ]
-};
-
-const BODIES = [
-  {id:'mercury',name:'수성',en:'Mercury',  a:0.387,mass:3.285e23,radius:2.44e6, albedo:.119,gravity:3.70,escv:4.25,baseT:167,  atm:'거의 없음 (Na 29%, O₂ 22%)', mag:'지구의 1.1%', desc:'자전=공전 2:3 조석공명. 대기 없어 온도 극단(-180°C~+430°C). 철핵 42%.',
-    size:1.8,  col:0xa8a8b8, emcol:0x333344, rings:false,
-    bands:[{y:0,w:.3,c:'rgba(140,140,160,.3)'},{y:.4,w:.2,c:'rgba(100,100,120,.2)'}],
-    polar:{n:'rgba(180,180,190,.6)',s:'rgba(180,180,190,.6)'}},
-  {id:'venus',  name:'금성',en:'Venus',    a:0.723,mass:4.867e24,radius:6.052e6,albedo:.75, gravity:8.87,escv:10.36,baseT:464,  atm:'CO₂ 96.5%, N₂ 3.5% / 기압92bar', mag:'없음(유도자기권)', desc:'역자전(-243일). 극단 온실효과 464°C. 황산 구름층 45~70km.',
-    size:3.5,  col:0xe8c870, emcol:0x604000, rings:false,
-    bands:[{y:-.1,w:.5,c:'rgba(220,190,80,.25)'},{y:.3,w:.4,c:'rgba(200,160,60,.2)'},{y:-.5,w:.3,c:'rgba(210,180,70,.15)'}],
-    polar:{n:'rgba(240,200,100,.5)',s:'rgba(240,200,100,.5)'}},
-  {id:'mars',   name:'화성',en:'Mars',     a:1.524,mass:6.39e23, radius:3.39e6, albedo:.25, gravity:3.72,escv:5.03, baseT:-65,   atm:'CO₂ 95.3%, N₂ 2.6%, Ar 1.9%', mag:'없음(지역자기장)', desc:'CO₂ 대기 0.006bar. 올림포스 몬스 21.9km. 과거 바다 흔적.',
-    size:2.5,  col:0xc14010, emcol:0x500800, rings:false,
-    bands:[{y:.1,w:.4,c:'rgba(180,80,40,.3)'},{y:-.2,w:.3,c:'rgba(160,60,30,.25)'},{y:.5,w:.25,c:'rgba(200,100,50,.2)'}],
-    polar:{n:'rgba(200,220,240,.7)',s:'rgba(200,220,240,.5)'}},
-  {id:'jupiter',name:'목성',en:'Jupiter',  a:5.203,mass:1.898e27,radius:7.149e7,albedo:.52, gravity:24.79,escv:59.5,baseT:-110, atm:'H₂ 89.8%, He 10.2%', mag:'지구의 20,000배', desc:'태양계 최대. 대적점 300년+ 폭풍. 자기장 20,000배. 갈릴레이 위성 4개.',
-    size:11,   col:0xc89860, emcol:0x503010, rings:true,ringInner:1.22,ringOuter:1.45,ringAlpha:.12,
-    bands:[{y:-.35,w:.18,c:'rgba(140,80,40,.45)'},{y:-.18,w:.14,c:'rgba(200,160,100,.35)'},{y:0,w:.16,c:'rgba(130,70,30,.5)'},{y:.15,w:.12,c:'rgba(190,140,80,.3)'},{y:.28,w:.18,c:'rgba(145,85,45,.4)'},{y:-.52,w:.1,c:'rgba(160,100,50,.25)'},{y:.46,w:.1,c:'rgba(150,90,40,.25)'}],
-    grs:true, polar:{n:'rgba(180,140,90,.4)',s:'rgba(180,140,90,.4)'}},
-  {id:'saturn', name:'토성',en:'Saturn',   a:9.537,mass:5.683e26,radius:6.027e7,albedo:.47, gravity:10.44,escv:35.5,baseT:-140, atm:'H₂ 96.3%, He 3.25%', mag:'지구의 578배', desc:'밀도 0.687g/cm³(물보다 가벼움). 고리=얼음93%. 타이탄 메탄 기상.',
-    size:9.5,  col:0xe8d8a0, emcol:0x604820, rings:true,ringInner:1.5,ringOuter:2.65,ringAlpha:.6,saturn:true,
-    bands:[{y:-.2,w:.15,c:'rgba(210,180,100,.3)'},{y:.05,w:.12,c:'rgba(180,150,80,.25)'},{y:.2,w:.1,c:'rgba(220,190,110,.2)'},{y:-.35,w:.1,c:'rgba(200,170,90,.2)'}],
-    polar:{n:'rgba(220,200,140,.4)',s:'rgba(220,200,140,.4)'}},
-  {id:'uranus', name:'천왕성',en:'Uranus',  a:19.19,mass:8.681e25,radius:2.556e7,albedo:.51, gravity:8.69,escv:21.3,baseT:-195,  atm:'H₂ 83%, He 15%, CH₄ 2.3%', mag:'지구의 50배(비대칭)', desc:'자전축 97.77° 기울기(역방향). 얼음 거인. 메탄이 청록색 원인.',
-    size:6.5,  col:0x6de0e0, emcol:0x003344, rings:true,ringInner:1.35,ringOuter:1.6,ringAlpha:.18,uranus:true,
-    bands:[{y:0,w:.6,c:'rgba(80,220,220,.12)'},{y:.4,w:.3,c:'rgba(60,200,200,.1)'}],
-    polar:{n:'rgba(120,240,240,.3)',s:'rgba(100,220,220,.25)'}},
-  {id:'neptune',name:'해왕성',en:'Neptune', a:30.07,mass:1.024e26,radius:2.476e7,albedo:.41, gravity:11.15,escv:23.5,baseT:-200, atm:'H₂ 80%, He 19%, CH₄ 1.5%', mag:'지구의 27배(비대칭)', desc:'수학으로 발견. 최대 풍속 2100km/h. 내부 잔열 방출. 진한 청색.',
-    size:6.0,  col:0x2848e0, emcol:0x000880, rings:true,ringInner:1.22,ringOuter:1.5,ringAlpha:.1,
-    bands:[{y:0,w:.5,c:'rgba(60,80,220,.2)'},{y:.3,w:.3,c:'rgba(40,60,200,.15)'}],
-    polar:{n:'rgba(100,130,255,.35)',s:'rgba(100,130,255,.3)'}},
+// ═══════════════════════════════════════════════════
+//  PLANET / MOON DATA
+// ═══════════════════════════════════════════════════
+const BODIES=[
+  {id:'mercury',name:'수성',en:'Mercury',emoji:'☿',
+   a:0.387,mass:3.285e23,radius:2.44e6,albedo:.119,gravity:3.70,baseT:167,
+   atm:'Na 29%, O₂ 22% (극미량). 기압~5×10⁻¹⁰ bar.',
+   mag:'지구의 1.1% (쌍극자 자기장)',
+   desc:'2:3 조석 공명. 자전축 0.034°. 대기 없어 -180°C~+430°C. 철핵이 전체 42%.',
+   sz:1.7, col:0xa0a0b4, ec:0x1a1a30,
+   bands:[[0,.28,[145,145,165,.26]],[.38,.2,[112,112,130,.2]]],
+   polar:['rgba(192,192,200,.52)','rgba(192,192,200,.52)'],grs:false,rings:false,
+   moons:[]},
+  {id:'venus',name:'금성',en:'Venus',emoji:'♀',
+   a:0.723,mass:4.867e24,radius:6.052e6,albedo:.75,gravity:8.87,baseT:464,
+   atm:'CO₂ 96.5%, N₂ 3.5%. 기압 92bar. 황산 구름 45~70km.',
+   mag:'없음 (유도 자기권)',
+   desc:'역방향 자전(-243.0일). 극단 온실효과로 태양계에서 가장 뜨거운 행성(464°C).',
+   sz:3.3, col:0xe8c870, ec:0x604000,
+   bands:[[-.1,.48,[222,192,80,.2]],[.3,.38,[200,162,60,.17]],[-.5,.28,[215,180,70,.13]]],
+   polar:['rgba(248,215,108,.42)','rgba(248,215,108,.42)'],grs:false,rings:false,
+   moons:[]},
+  {id:'mars',name:'화성',en:'Mars',emoji:'♂',
+   a:1.524,mass:6.39e23,radius:3.39e6,albedo:.25,gravity:3.72,baseT:-65,
+   atm:'CO₂ 95.3%, N₂ 2.6%, Ar 1.9%. 기압 0.006bar.',
+   mag:'없음 (고대 잔류 자기장)',
+   desc:'올림포스 몬스 21.9km. 과거 바다 흔적. 붉은 색은 산화철(Fe₂O₃).',
+   sz:2.3, col:0xc14010, ec:0x500800,
+   bands:[[.1,.38,[175,72,32,.28]],[-.2,.28,[158,55,24,.22]],[.48,.22,[198,95,45,.18]]],
+   polar:['rgba(210,228,248,.68)','rgba(210,228,248,.52)'],grs:false,rings:false,
+   moons:[
+     {id:'phobos',name:'포보스',en:'Phobos',col:0x887766,sz:.4,orb:10.0,T:.3189,
+      mass:1.06e16,radius:11.3e3,gravity:.0057,
+      desc:'화성 내위성. 조석력으로 점점 가까워짐 — 약 1억년 후 로슈 한계 진입.'},
+     {id:'deimos',name:'데이모스',en:'Deimos',col:0x998877,sz:.3,orb:16.0,T:1.263,
+      mass:1.48e15,radius:6.2e3,gravity:.003,
+      desc:'화성 외위성. 공전주기 1.263일. 매우 작고 어둡다.'},
+   ]},
+  {id:'jupiter',name:'목성',en:'Jupiter',emoji:'♃',
+   a:5.203,mass:1.898e27,radius:7.149e7,albedo:.52,gravity:24.79,baseT:-110,
+   atm:'H₂ 89.8%, He 10.2%. 북극·남극 강한 오로라.',
+   mag:'지구의 20,000배. 자기권 반경 7백만km.',
+   desc:'태양계 최대 행성. 대적점(GRS) 300년+ 폭풍. 갈릴레이 위성 4개.',
+   sz:11.0, col:0xc89860, ec:0x503010,
+   bands:[[-.35,.16,[138,74,34,.52]],[-.2,.13,[200,155,92,.4]],[-.07,.15,[128,62,26,.54]],
+          [.07,.11,[218,165,92,.34]],[.2,.14,[140,78,38,.46]],[.34,.15,[148,82,40,.42]],
+          [-.5,.09,[158,94,44,.22]],[.48,.09,[148,86,36,.22]]],
+   polar:['rgba(175,136,86,.36)','rgba(175,136,86,.36)'],grs:true,
+   rings:true,ringInner:1.22,ringOuter:1.48,ringAlpha:.12,saturn:false,
+   moons:[
+     {id:'io',name:'이오',en:'Io',col:0xf5d870,sz:1.0,orb:22.0,T:1.7691,
+      mass:8.93e22,radius:1821.6e3,gravity:1.796,tidal:true,
+      desc:'태양계 최강 화산활동. 목성 조석력 내부 가열. 황·SO₂ 분출 400개 화산.'},
+     {id:'europa',name:'에우로파',en:'Europa',col:0xd8eeff,sz:.88,orb:32.0,T:3.5518,
+      mass:4.80e22,radius:1560.8e3,gravity:1.315,tidal:true,
+      tidalHeat:83.5e9,iceThick:15e3,
+      desc:'얼음 지각(15km) 아래 깊이 100km+ 액체 바다. 생명체 최유력 후보. NASA Europa Clipper 2024 발사.'},
+     {id:'ganymede',name:'가니메데',en:'Ganymede',col:0xaaaacc,sz:1.3,orb:44.0,T:7.1546,
+      mass:1.482e23,radius:2634.1e3,gravity:1.428,
+      desc:'태양계 최대 위성(반경 2634km — 수성보다 큼). 자체 자기장 보유.'},
+     {id:'callisto',name:'칼리스토',en:'Callisto',col:0x776655,sz:1.1,orb:60.0,T:16.689,
+      mass:1.076e23,radius:2410.3e3,gravity:1.235,
+      desc:'충돌구 밀도 태양계 최고. 지질활동 없음. 4:2:1 라플라스 공명 외부.'},
+   ]},
+  {id:'saturn',name:'토성',en:'Saturn',emoji:'♄',
+   a:9.537,mass:5.683e26,radius:6.027e7,albedo:.47,gravity:10.44,baseT:-140,
+   atm:'H₂ 96.3%, He 3.25%. 북극 정육각형 폭풍.',
+   mag:'지구의 578배. 자전축과 거의 일치(<1°) — 태양계 유일.',
+   desc:'밀도 0.687g/cm³(물보다 가벼움). 정밀 고리=B·A·C·F·E링. 274개 위성.',
+   sz:9.5, col:0xe8d8a0, ec:0x604820,
+   bands:[[-.2,.14,[210,178,96,.26]],[.04,.11,[180,148,74,.22]],
+          [.17,.09,[220,190,108,.17]],[-.34,.09,[200,168,86,.17]]],
+   polar:['rgba(222,202,142,.36)','rgba(222,202,142,.36)'],grs:false,
+   rings:true,saturn:true,
+   moons:[
+     {id:'mimas',name:'미마스',en:'Mimas',col:0xbbbbcc,sz:.35,orb:16.0,T:.9424,
+      mass:3.75e19,radius:198.2e3,gravity:.064,
+      desc:'헤르셸 분화구(지름 130km). "Death Star" 외형. 카시니 간극 2:1 공명.'},
+     {id:'enceladus',name:'엔켈라두스',en:'Enceladus',col:0xeef8ff,sz:.4,orb:22.0,T:1.3702,
+      mass:1.08e20,radius:252.1e3,gravity:.113,tidal:true,tidalHeat:15.8e9,iceThick:20e3,
+      desc:'남극 호랑이 줄무늬 간헐천. 지하 전구 바다 확인. 알베도 1.0 (최고 반사율).'},
+     {id:'tethys',name:'테티스',en:'Tethys',col:0xccddee,sz:.55,orb:29.0,T:1.8878,
+      mass:6.17e20,radius:531.1e3,gravity:.146,
+      desc:'밀도 0.98g/cm³ — 거의 순수 물얼음. 이타카 협곡(길이 2,000km).'},
+     {id:'dione',name:'디오네',en:'Dione',col:0xbbccdd,sz:.58,orb:37.0,T:2.7369,
+      mass:1.10e21,radius:561.4e3,gravity:.232,
+      desc:'엔켈라두스와 2:1 공명. 지하 바다 가능성. 단층 절벽 지형.'},
+     {id:'rhea',name:'레아',en:'Rhea',col:0xaabbcc,sz:.62,orb:46.0,T:4.5175,
+      mass:2.307e21,radius:763.8e3,gravity:.264,
+      desc:'토성 두 번째 큰 위성. 충돌구로 포화된 고대 표면.'},
+     {id:'titan',name:'타이탄',en:'Titan',col:0xe8a030,sz:1.2,orb:60.0,T:15.945,
+      mass:1.345e23,radius:2574.7e3,gravity:1.352,
+      desc:'메탄 강·호수·비. 기압 1.45bar. 두꺼운 질소 대기. Huygens 탐사선 착륙(2005).'},
+     {id:'iapetus',name:'이아페투스',en:'Iapetus',col:0x887755,sz:.68,orb:78.0,T:79.32,
+      mass:1.81e21,radius:734.5e3,gravity:.223,
+      desc:'밝은 반구/어두운 반구 극명 대비. 적도 산맥. 궤도가 토성 적도에서 15° 기울어짐.'},
+   ]},
+  {id:'uranus',name:'천왕성',en:'Uranus',emoji:'⛢',
+   a:19.19,mass:8.681e25,radius:2.556e7,albedo:.51,gravity:8.69,baseT:-195,
+   atm:'H₂ 83%, He 15%, CH₄ 2.3%. 청록색 = 메탄 적색광 흡수.',
+   mag:'지구의 50배. 자전축과 59° 어긋남 — 비대칭 구조.',
+   desc:'자전축 97.77° — 옆으로 누운 채 공전. 역방향 자전. 얼음 거인.',
+   sz:6.2, col:0x6de0e0, ec:0x003344,
+   bands:[[0,.52,[72,212,212,.09]],[.36,.26,[56,195,195,.07]]],
+   polar:['rgba(112,235,235,.25)','rgba(98,218,218,.2)'],grs:false,
+   rings:true,ringInner:1.32,ringOuter:1.58,ringAlpha:.2,uranus:true,
+   moons:[
+     {id:'miranda',name:'미란다',en:'Miranda',col:0xaabbbb,sz:.34,orb:12.0,T:1.4135,
+      mass:6.59e19,radius:235.8e3,gravity:.079,
+      desc:'태양계 최극단 지형. 수직 절벽 20km. 지각 파열 흔적.'},
+     {id:'ariel',name:'아리엘',en:'Ariel',col:0xbbcccc,sz:.54,orb:20.0,T:2.52,
+      mass:1.35e21,radius:578.9e3,gravity:.27,
+      desc:'천왕성 위성 중 가장 밝고 지질 활동 흔적 풍부.'},
+     {id:'umbriel',name:'움브리엘',en:'Umbriel',col:0x666677,sz:.5,orb:28.0,T:4.144,
+      mass:1.17e21,radius:584.7e3,gravity:.23,
+      desc:'가장 어두운 천왕성 위성. 고대 표면.'},
+     {id:'titania',name:'티타니아',en:'Titania',col:0x99aaaa,sz:.64,orb:38.0,T:8.706,
+      mass:3.53e21,radius:788.9e3,gravity:.379,
+      desc:'천왕성 최대 위성. 협곡과 단층 절벽 다수.'},
+     {id:'oberon',name:'오베론',en:'Oberon',col:0x887788,sz:.6,orb:50.0,T:13.463,
+      mass:3.014e21,radius:761.4e3,gravity:.346,
+      desc:'천왕성 두 번째 큰 위성. 고대 충돌구 다수.'},
+   ]},
+  {id:'neptune',name:'해왕성',en:'Neptune',emoji:'♆',
+   a:30.07,mass:1.024e26,radius:2.476e7,albedo:.41,gravity:11.15,baseT:-200,
+   atm:'H₂ 80%, He 19%, CH₄ 1.5%. 최대 풍속 2,100 km/h.',
+   mag:'지구의 27배. 자전축과 47° 어긋남. 사중극자 구조.',
+   desc:'수학으로 예측 후 발견. 태양계 최강 풍속. 내부 잔열이 태양열의 2.6배 방출.',
+   sz:6.0, col:0x2848e0, ec:0x000880,
+   bands:[[0,.46,[52,70,210,.17]],[.26,.26,[36,55,192,.13]]],
+   polar:['rgba(92,122,248,.3)','rgba(92,122,248,.26)'],grs:false,
+   rings:true,ringInner:1.22,ringOuter:1.48,ringAlpha:.11,
+   moons:[
+     {id:'proteus',name:'프로테우스',en:'Proteus',col:0x505060,sz:.44,orb:12.0,T:1.1223,
+      mass:4.4e19,radius:210e3,gravity:.07,
+      desc:'불규칙 상자 형태. 알베도 6% — 매우 어둡다. Voyager 2 발견(1989).'},
+     {id:'triton',name:'트리톤',en:'Triton',col:0x88aacc,sz:.86,orb:24.0,T:-5.8769,
+      mass:2.139e22,radius:1353.4e3,gravity:.779,tidal:true,tidalHeat:5e9,iceThick:8e3,
+      desc:'역행 궤도(-5.88일). 질소 간헐천. 36억년 후 로슈 한계 진입 → 고리로 분해.'},
+     {id:'nereid',name:'네레이드',en:'Nereid',col:0x667788,sz:.3,orb:42.0,T:360.14,
+      mass:3.1e19,radius:170e3,gravity:.071,
+      desc:'이심률 0.7507 — 태양계 위성 중 최고. 트리톤 포획 당시 교란.'},
+   ]},
 ];
 
-const EUROPA_DATA = {id:'europa',name:'에우로파',en:'Europa',mass:4.80e22,radius:1561e3,gravity:1.315,escv:2.025,
-  albedo:.67,orbit_r:6.71e8,tidalHeat:83.5e9,iceThick:15e3,
-  desc:'얼음 지각(15km) 아래 깊이 100km+ 액체 바다. 목성 조석력 내부 가열. NASA Europa Clipper 2024 발사.'};
+// ── flat lookup ──
+const ALL_BODIES={};  // id → data (+parentId for moons)
+BODIES.forEach(p=>{
+  ALL_BODIES[p.id]={...p,isMoon:false};
+  p.moons.forEach(m=>ALL_BODIES[m.id]={...m,isMoon:true,parentId:p.id,parentBody:p});
+});
 
 // ═══════════════════════════════════════════════════
 //  THREE.JS
 // ═══════════════════════════════════════════════════
 const cv=document.getElementById('c');
-const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.1;
+renderer.toneMappingExposure=1.12;
 
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.01,5000);
-camera.position.set(0,45,100);
-camera.lookAt(0,0,0);
+const camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.05,5000);
+camera.position.set(0,120,380);
 
-const sunLight=new THREE.PointLight(0xfff5e0,3.5,2000,1.5);
-scene.add(sunLight);
-scene.add(new THREE.AmbientLight(0x111122,.45));
+// Lights
+const sunPt=new THREE.PointLight(0xfff5e0,4.0,3500,1.2);
+scene.add(sunPt);
+scene.add(new THREE.AmbientLight(0x0d1a2e,.55));
 
-// orbit control state
-const oc={sph:new THREE.Spherical(110,Math.PI/3.2,0),target:new THREE.Vector3(),drag:false,lx:0,ly:0};
-function applyOC(){
-  oc.sph.phi=Math.max(.08,Math.min(Math.PI-.08,oc.sph.phi));
-  oc.sph.radius=Math.max(2,Math.min(800,oc.sph.radius));
-  camera.position.setFromSpherical(oc.sph).add(oc.target);
-  camera.lookAt(oc.target);
+// ── Camera state ──
+// This camera system keeps orbitTarget as the REAL reference point,
+// and when locked, we lerp orbitTarget to the live planet position every frame.
+const cam={
+  orbitTarget:new THREE.Vector3(),
+  radius:380,
+  theta:0.2,
+  phi:1.05,
+  dragging:false,
+  lastX:0,lastY:0,
+  minR:2, maxR:2000,
+  animating:false,
+  animT:0,
+  animFrom:{pos:new THREE.Vector3(),target:new THREE.Vector3(),r:380,phi:1.05,theta:0.2},
+  animTo:{target:new THREE.Vector3(),r:50,phi:1.05,theta:0.2},
+};
+
+function applyCam(){
+  cam.phi=Math.max(.05,Math.min(Math.PI-.05,cam.phi));
+  cam.radius=Math.max(cam.minR,Math.min(cam.maxR,cam.radius));
+  const x=cam.orbitTarget.x+cam.radius*Math.sin(cam.phi)*Math.cos(cam.theta);
+  const y=cam.orbitTarget.y+cam.radius*Math.cos(cam.phi);
+  const z=cam.orbitTarget.z+cam.radius*Math.sin(cam.phi)*Math.sin(cam.theta);
+  camera.position.set(x,y,z);
+  camera.lookAt(cam.orbitTarget);
 }
-applyOC();
 
-// camera lerp
-const ct={active:false,t:0,sp:new THREE.Vector3(),sl:new THREE.Vector3(),tp:new THREE.Vector3(),tl:new THREE.Vector3()};
-function camFocus(pos,dist){
-  ct.sp.copy(camera.position); ct.sl.copy(oc.target);
-  const off=new THREE.Vector3(dist*.85,dist*.4,dist*.85);
-  ct.tp.copy(pos).add(off); ct.tl.copy(pos);
-  ct.t=0; ct.active=true;
-  setTimeout(()=>{ct.active=false;oc.target.copy(pos);oc.sph.setFromVector3(pos.clone().negate().add(ct.tp));},1400);
+// ── Lock-on state ──
+let lockedId=null;           // body id currently locked
+let lockedMesh=null;         // THREE.Mesh of locked body
+
+// ── Smooth transition ──
+function startTransition(toBid, toMesh){
+  const bd=ALL_BODIES[toBid];
+  if(!bd)return;
+  // Desired radius based on body size
+  const sz=bd.sz||1;
+  const desiredR=bd.isMoon?sz*22+10:sz*5.5+14;
+  const desiredMin=bd.isMoon?sz*3:sz*2.2;
+  const desiredMax=desiredR*40;
+
+  cam.animFrom.pos.copy(camera.position);
+  cam.animFrom.target.copy(cam.orbitTarget);
+  cam.animFrom.r=cam.radius;
+  cam.animFrom.phi=cam.phi;
+  cam.animFrom.theta=cam.theta;
+
+  cam.animTo.target.copy(toMesh.position);
+  cam.animTo.r=desiredR;
+  // Keep current angles during transition
+  cam.animTo.phi=cam.phi;
+  cam.animTo.theta=cam.theta;
+
+  cam.animating=true;
+  cam.animT=0;
+
+  // Set min/max after transition
+  setTimeout(()=>{
+    cam.minR=desiredMin;
+    cam.maxR=desiredMax;
+  },600);
 }
 
 // ═══════════════════════════════════════════════════
-//  PLANET TEXTURES via Canvas
+//  TEXTURE FACTORIES
 // ═══════════════════════════════════════════════════
-function makeTexture(bodyDef, radN=1.0, atmN=0.5){
-  const S=512;
-  const cv=document.createElement('canvas'); cv.width=cv.height=S;
-  const g=cv.getContext('2d');
-  const cx=S/2, cy=S/2, R=S/2-2;
+function makeGlowTex(S=128,c0='rgba(255,250,200,.8)',c1='rgba(0,0,0,0)'){
+  const cv2=document.createElement('canvas');cv2.width=cv2.height=S;
+  const g=cv2.getContext('2d'),h=S*.5;
+  const gr=g.createRadialGradient(h,h,0,h,h,h);
+  gr.addColorStop(0,c0);gr.addColorStop(.4,'rgba(200,180,80,.25)');gr.addColorStop(1,c1);
+  g.fillStyle=gr;g.fillRect(0,0,S,S);
+  return new THREE.CanvasTexture(cv2);
+}
 
-  // Base gradient (sphere illusion)
-  const bg=g.createRadialGradient(cx-R*.3,cy-R*.3,R*.05,cx,cy,R);
-  const c=new THREE.Color(bodyDef.col);
-  // Heat shift: increase red, decrease blue when radiation high
+function makePlanetTex(bd,radN=1,atmN=.5){
+  const S=512,cx=S/2,R=S/2-1;
+  const cv2=document.createElement('canvas');cv2.width=cv2.height=S;
+  const g=cv2.getContext('2d');
+  const bc=new THREE.Color(bd.col);
   const heat=Math.max(0,radN-1);
-  const r=Math.min(1,c.r+heat*.35), gr=Math.max(0,c.g-heat*.15), bl=Math.max(0,c.b-heat*.25);
-  bg.addColorStop(0,`rgba(${Math.round(r*255+80)},${Math.round(gr*255+80)},${Math.round(bl*255+80)},1)`);
-  bg.addColorStop(.4,`rgb(${Math.round(r*255)},${Math.round(gr*255)},${Math.round(bl*255)})`);
-  bg.addColorStop(1,`rgb(${Math.round(r*80)},${Math.round(gr*70)},${Math.round(bl*80)})`);
-  g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fillStyle=bg; g.fill();
-
-  // Bands
-  g.save(); g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.clip();
-  bodyDef.bands.forEach(b=>{
-    const by=cy+b.y*S, bh=b.w*S;
-    // Heat makes bands redder
-    const bandCol=b.c.replace('rgba(','').replace(')','').split(',');
-    const br=Math.min(255,parseInt(bandCol[0])+heat*60);
-    const bg2=g.createLinearGradient(0,by-bh/2,0,by+bh/2);
-    bg2.addColorStop(0,`rgba(${br},${bandCol[1]},${bandCol[2]},0)`);
-    bg2.addColorStop(.5,`rgba(${br},${bandCol[1]},${bandCol[2]},${bandCol[3]}`);
-    bg2.addColorStop(1,`rgba(${br},${bandCol[1]},${bandCol[2]},0)`);
-    g.fillStyle=bg2; g.fillRect(0,by-bh/2,S,bh);
+  const r=Math.min(1,bc.r+heat*.38),gv=Math.max(0,bc.g-heat*.2),b=Math.max(0,bc.b-heat*.3);
+  const bg=g.createRadialGradient(cx-R*.28,cx*.72,R*.04,cx,cx,R);
+  bg.addColorStop(0,`rgb(${Math.min(255,r*255+82)},${Math.min(255,gv*255+82)},${Math.min(255,b*255+82)})`);
+  bg.addColorStop(.38,`rgb(${Math.round(r*255)},${Math.round(gv*255)},${Math.round(b*255)})`);
+  bg.addColorStop(1,`rgb(${Math.round(r*78)},${Math.round(gv*68)},${Math.round(b*72)})`);
+  g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.fillStyle=bg;g.fill();
+  g.save();g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.clip();
+  bd.bands.forEach(([yf,wf,c])=>{
+    const [br,bg2,bb,ba]=c;
+    const by=cx+yf*S,bh=wf*S;
+    const hbr=Math.min(255,br+heat*55);
+    const bgr=g.createLinearGradient(0,by-bh/2,0,by+bh/2);
+    bgr.addColorStop(0,`rgba(${hbr},${bg2},${bb},0)`);
+    bgr.addColorStop(.5,`rgba(${hbr},${bg2},${bb},${ba})`);
+    bgr.addColorStop(1,`rgba(${hbr},${bg2},${bb},0)`);
+    g.fillStyle=bgr;g.fillRect(0,by-bh/2,S,bh);
   });
-
-  // Jupiter Great Red Spot
-  if(bodyDef.grs){
-    const grsX=cx+S*.18, grsY=cy+S*.02;
-    const grsRx=S*.12*(1+heat*.3), grsRy=S*.075;
-    const grsG=g.createRadialGradient(grsX,grsY,0,grsX,grsY,grsRx);
-    grsG.addColorStop(0,`rgba(${Math.min(255,200+heat*55)},${Math.max(30,80-heat*40)},20,.95)`);
-    grsG.addColorStop(.5,`rgba(${Math.min(255,180+heat*40)},${Math.max(20,50-heat*30)},10,.6)`);
-    grsG.addColorStop(1,'rgba(0,0,0,0)');
-    g.save(); g.scale(1,grsRy/grsRx);
-    g.beginPath(); g.arc(grsX,grsY*(grsRx/grsRy),grsRx,0,Math.PI*2);
-    g.fillStyle=grsG; g.fill(); g.restore();
-    // Swirl lines
-    for(let i=0;i<4;i++){
-      const sa=i*Math.PI/2, ea=sa+Math.PI*.8;
-      g.beginPath(); g.ellipse(grsX,grsY,grsRx*(1.1+i*.1),grsRy*(1.1+i*.1),0,sa,ea);
-      g.strokeStyle=`rgba(${Math.min(255,160+heat*40)},80,30,.2)`; g.lineWidth=1.5; g.stroke();
+  if(bd.grs){
+    const gx=cx+S*.16,gy=cx+S*.02,grx=S*.13*(1+heat*.25),gry=S*.075;
+    const gg=g.createRadialGradient(gx,gy,0,gx,gy,grx);
+    gg.addColorStop(0,`rgba(${Math.min(255,205+heat*52)},${Math.max(22,68-heat*44)},14,.96)`);
+    gg.addColorStop(.45,`rgba(${Math.min(255,172+heat*38)},${Math.max(12,42-heat*28)},7,.62)`);
+    gg.addColorStop(1,'rgba(0,0,0,0)');
+    g.save();g.scale(1,gry/grx);
+    g.beginPath();g.arc(gx,gy*(grx/gry),grx,0,Math.PI*2);g.fillStyle=gg;g.fill();
+    for(let i=0;i<5;i++){
+      g.beginPath();g.ellipse(gx,gy,grx*(1.04+i*.12),gry*(1.04+i*.12),0,i*.4,(i+.8)*Math.PI*.9);
+      g.strokeStyle=`rgba(${Math.min(255,155+heat*32)},58,18,.17)`;g.lineWidth=1.8;g.stroke();
     }
+    g.restore();
   }
-
-  // Polar caps
-  const pc=bodyDef.polar;
-  if(pc){
-    const capH=S*.12+atmN*S*.04;
+  if(bd.polar){
+    const capH=S*.1+atmN*S*.04;
     const ng=g.createLinearGradient(0,0,0,capH);
-    ng.addColorStop(0,pc.n); ng.addColorStop(1,'rgba(0,0,0,0)');
-    g.fillStyle=ng; g.fillRect(0,0,S,capH);
-    const sg2=g.createLinearGradient(0,S-capH,0,S);
-    sg2.addColorStop(0,'rgba(0,0,0,0)'); sg2.addColorStop(1,pc.s);
-    g.fillStyle=sg2; g.fillRect(0,S-capH,S,capH);
+    ng.addColorStop(0,bd.polar[0]);ng.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=ng;g.fillRect(0,0,S,capH);
+    const sg=g.createLinearGradient(0,S-capH,0,S);
+    sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,bd.polar[1]);
+    g.fillStyle=sg;g.fillRect(0,S-capH,S,capH);
   }
   g.restore();
-
-  // Atmosphere glow overlay (density slider)
-  if(atmN>0.1){
-    const ag=g.createRadialGradient(cx,cy,R*.7,cx,cy,R);
-    const atmC=bodyDef.id==='venus'?`rgba(240,210,80,${atmN*.4})`
-              :bodyDef.id==='mars'?`rgba(210,110,60,${atmN*.3})`
-              :bodyDef.id==='jupiter'||bodyDef.id==='saturn'?`rgba(200,160,80,${atmN*.2})`
-              :bodyDef.id==='uranus'?`rgba(80,220,220,${atmN*.25})`
-              :bodyDef.id==='neptune'?`rgba(60,100,240,${atmN*.25})`:`rgba(100,180,255,${atmN*.2})`;
-    ag.addColorStop(0,'rgba(0,0,0,0)'); ag.addColorStop(1,atmC);
-    g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fillStyle=ag; g.fill();
+  if(atmN>.06){
+    const atmCols={venus:[240,210,80],mars:[212,108,60],jupiter:[200,162,84],
+      saturn:[220,192,112],uranus:[80,222,222],neptune:[60,100,242]};
+    const ac=atmCols[bd.id]||[100,180,255];
+    const ag=g.createRadialGradient(cx,cx,R*.72,cx,cx,R);
+    ag.addColorStop(0,'rgba(0,0,0,0)');
+    ag.addColorStop(1,`rgba(${ac[0]},${ac[1]},${ac[2]},${atmN*.34})`);
+    g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.fillStyle=ag;g.fill();
   }
-
-  // Rim highlight
-  const rim=g.createRadialGradient(cx,cy,R*.82,cx,cy,R);
-  rim.addColorStop(0,'rgba(255,255,255,0)'); rim.addColorStop(1,'rgba(255,255,255,.08)');
-  g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fillStyle=rim; g.fill();
-
-  return new THREE.CanvasTexture(cv);
+  const rim=g.createRadialGradient(cx,cx,R*.8,cx,cx,R);
+  rim.addColorStop(0,'rgba(255,255,255,0)');rim.addColorStop(1,'rgba(255,255,255,.065)');
+  g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.fillStyle=rim;g.fill();
+  return new THREE.CanvasTexture(cv2);
 }
 
-function makeMoonTexture(moon){
-  const S=128; const cv=document.createElement('canvas'); cv.width=cv.height=S;
-  const g=cv.getContext('2d'); const cx=S/2,cy=S/2,R=S/2-2;
-  const c=new THREE.Color(moon.col);
-  const bg=g.createRadialGradient(cx-R*.3,cy-R*.3,R*.05,cx,cy,R);
-  bg.addColorStop(0,`rgb(${Math.min(255,c.r*255+70)},${Math.min(255,c.g*255+70)},${Math.min(255,c.b*255+70)})`);
-  bg.addColorStop(.5,`rgb(${Math.round(c.r*255)},${Math.round(c.g*255)},${Math.round(c.b*255)})`);
-  bg.addColorStop(1,`rgb(${Math.round(c.r*80)},${Math.round(c.g*80)},${Math.round(c.b*80)})`);
-  g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fillStyle=bg; g.fill();
-  // Surface features
-  if(moon.id==='io'){// Volcanic yellow-orange
-    for(let i=0;i<8;i++){const x=Math.random()*S,y=Math.random()*S;
-      const lg=g.createRadialGradient(x,y,0,x,y,8+Math.random()*10);
-      lg.addColorStop(0,'rgba(255,80,0,.7)'); lg.addColorStop(1,'rgba(0,0,0,0)');
-      g.beginPath();g.arc(x,y,12,0,Math.PI*2);g.fillStyle=lg;g.fill();}
+function makeMoonTex(m){
+  const S=128,cx=S/2,R=S/2-1;
+  const cv2=document.createElement('canvas');cv2.width=cv2.height=S;
+  const g=cv2.getContext('2d');
+  const mc=new THREE.Color(m.col);
+  const bg=g.createRadialGradient(cx-R*.28,cx*.72,R*.04,cx,cx,R);
+  bg.addColorStop(0,`rgb(${Math.min(255,mc.r*255+68)},${Math.min(255,mc.g*255+68)},${Math.min(255,mc.b*255+68)})`);
+  bg.addColorStop(.45,`rgb(${Math.round(mc.r*255)},${Math.round(mc.g*255)},${Math.round(mc.b*255)})`);
+  bg.addColorStop(1,`rgb(${Math.round(mc.r*70)},${Math.round(mc.g*70)},${Math.round(mc.b*70)})`);
+  g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.fillStyle=bg;g.fill();
+  g.save();g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.clip();
+  if(m.id==='io'){for(let i=0;i<9;i++){
+    const vx=Math.random()*S,vy=Math.random()*S;
+    const vg=g.createRadialGradient(vx,vy,0,vx,vy,7+Math.random()*9);
+    vg.addColorStop(0,'rgba(255,72,0,.78)');vg.addColorStop(1,'rgba(0,0,0,0)');
+    g.beginPath();g.arc(vx,vy,13,0,Math.PI*2);g.fillStyle=vg;g.fill();
+  }}
+  if(m.id==='europa'){g.strokeStyle='rgba(165,145,215,.52)';g.lineWidth=1.2;
+    for(let i=0;i<8;i++){g.beginPath();g.moveTo(Math.random()*S,Math.random()*S);g.lineTo(Math.random()*S,Math.random()*S);g.stroke();}}
+  if(m.id==='titan'){const h2=g.createRadialGradient(cx,cx,R*.5,cx,cx,R);
+    h2.addColorStop(0,'rgba(0,0,0,0)');h2.addColorStop(1,'rgba(202,116,16,.44)');
+    g.beginPath();g.arc(cx,cx,R,0,Math.PI*2);g.fillStyle=h2;g.fill();}
+  if(m.id==='triton'){g.strokeStyle='rgba(32,52,92,.52)';g.lineWidth=1.5;
+    for(let i=0;i<5;i++){const sx=cx+Math.random()*28-14,sy=cx+18;
+      g.beginPath();g.moveTo(sx,sy);g.lineTo(sx+(Math.random()-.5)*18,sy-28);g.stroke();}}
+  if(m.id==='enceladus'){g.strokeStyle='rgba(158,212,255,.42)';g.lineWidth=1;
+    for(let i=0;i<5;i++){const sx=cx+Math.random()*20-10,sy=cx+20;
+      g.beginPath();g.moveTo(sx,sy);g.lineTo(sx+(Math.random()-.5)*12,sy-24);g.stroke();}}
+  const nCr=(m.id==='callisto'||m.id==='rhea'||m.id==='mimas')?10:4;
+  for(let i=0;i<nCr;i++){
+    const cx2=Math.random()*S,cy2=Math.random()*S,cr=2+Math.random()*6;
+    const ch=g.createRadialGradient(cx2-cr*.3,cy2-cr*.3,cr*.08,cx2,cy2,cr);
+    ch.addColorStop(0,'rgba(255,255,255,.14)');ch.addColorStop(1,'rgba(0,0,0,.22)');
+    g.beginPath();g.arc(cx2,cy2,cr,0,Math.PI*2);
+    g.strokeStyle='rgba(0,0,0,.26)';g.lineWidth=.9;g.stroke();g.fillStyle=ch;g.fill();
   }
-  if(moon.id==='europa'){// Ice cracks
-    g.strokeStyle='rgba(180,160,220,.5)';g.lineWidth=1;
-    for(let i=0;i<6;i++){g.beginPath();g.moveTo(Math.random()*S,Math.random()*S);g.lineTo(Math.random()*S,Math.random()*S);g.stroke();}
-  }
-  if(moon.id==='titan'){// Orange haze
-    const haze=g.createRadialGradient(cx,cy,R*.6,cx,cy,R);
-    haze.addColorStop(0,'rgba(0,0,0,0)'); haze.addColorStop(1,'rgba(200,120,20,.4)');
-    g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fillStyle=haze;g.fill();
-  }
-  if(moon.id==='triton'){// Nitrogen geysers (dark streaks)
-    g.strokeStyle='rgba(40,60,100,.5)';g.lineWidth=1.5;
-    for(let i=0;i<4;i++){const sx=cx+Math.random()*30-15,sy=cy+20;
-      g.beginPath();g.moveTo(sx,sy);g.lineTo(sx+(Math.random()-0.5)*20,sy-30);g.stroke();}
-  }
-  // Craters
-  const nCraters=moon.id==='callisto'||moon.id==='rhea'?12:4;
-  for(let i=0;i<nCraters;i++){
-    const x=Math.random()*S,y=Math.random()*S,r=2+Math.random()*7;
-    g.beginPath();g.arc(x,y,r,0,Math.PI*2);
-    g.strokeStyle='rgba(0,0,0,.3)';g.lineWidth=1;g.stroke();
-    const ch=g.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);
-    ch.addColorStop(0,'rgba(255,255,255,.15)');ch.addColorStop(1,'rgba(0,0,0,.2)');
-    g.fillStyle=ch;g.fill();
-  }
-  return new THREE.CanvasTexture(cv);
+  g.restore();
+  return new THREE.CanvasTexture(cv2);
 }
 
-// Atmosphere shell (glow halo)
-function makeAtmoShell(body,atmN){
-  const c=body.id==='venus'?new THREE.Color(.95,.82,.3)
-          :body.id==='mars'?new THREE.Color(.85,.42,.22)
-          :body.id==='jupiter'?new THREE.Color(.8,.65,.35)
-          :body.id==='uranus'?new THREE.Color(.35,.88,.88)
-          :body.id==='neptune'?new THREE.Color(.25,.38,.95)
-          :new THREE.Color(.4,.7,1);
-  return new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:atmN*.18+.03,
-    blending:THREE.AdditiveBlending,side:THREE.BackSide,depthWrite:false});
+function makeSaturnRingTex(){
+  const W=512,H=4;const cv2=document.createElement('canvas');cv2.width=W;cv2.height=H;
+  const g=cv2.getContext('2d');
+  const segs=[
+    {s:.0,  e:.22,a:.17,'r':170,'g':140,'b':100},
+    {s:.22, e:.54,a:.64,'r':218,'g':195,'b':158},
+    {s:.54, e:.57,a:.02,'r':0,  'g':0,  'b':0  },
+    {s:.57, e:.87,a:.44,'r':202,'g':178,'b':140},
+    {s:.87, e:.94,a:.10,'r':188,'g':165,'b':125},
+    {s:.94, e:1.0,a:.04,'r':162,'g':142,'b':108},
+  ];
+  segs.forEach(s=>{
+    const grd=g.createLinearGradient(s.s*W,0,s.e*W,0);
+    grd.addColorStop(0,`rgba(${s.r},${s.g},${s.b},${s.a*.45})`);
+    grd.addColorStop(.3,`rgba(${s.r},${s.g},${s.b},${s.a})`);
+    grd.addColorStop(.7,`rgba(${s.r},${s.g},${s.b},${s.a})`);
+    grd.addColorStop(1,`rgba(${s.r},${s.g},${s.b},${s.a*.38})`);
+    g.fillStyle=grd;g.fillRect(s.s*W,0,(s.e-s.s)*W,H);
+  });
+  const tex=new THREE.CanvasTexture(cv2);
+  tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
+  return tex;
+}
+
+// Atmosphere rim shader
+function makeAtmoShader(r,gv,b){
+  return new THREE.ShaderMaterial({
+    uniforms:{c:{value:.18},p:{value:3.5},gColor:{value:new THREE.Color(r/255,gv/255,b/255)},vv:{value:new THREE.Vector3()}},
+    vertexShader:`uniform vec3 vv;uniform float c,p;varying float intensity;
+      void main(){vec3 n=normalize(normalMatrix*normal);vec3 e=normalize(normalMatrix*vv);
+      intensity=pow(c-dot(n,e),p);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader:`uniform vec3 gColor;varying float intensity;
+      void main(){gl_FragColor=vec4(gColor*intensity,intensity);}`,
+    side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
+  });
 }
 
 // ═══════════════════════════════════════════════════
 //  BUILD SCENE
 // ═══════════════════════════════════════════════════
-// Starfield — 35k stars, single draw call
+// 35k Stars — single GPU draw call
 (()=>{
-  const N=35000; const pos=new Float32Array(N*3); const col=new Float32Array(N*3);
-  const pal=[[1,.97,1],[.88,.93,1],[1,.9,.82],[.9,.85,1],[.75,.88,1]];
+  const N=35000,pos=new Float32Array(N*3),col=new Float32Array(N*3);
+  const pal=[[1,.97,1],[.88,.93,1],[1,.9,.82],[.9,.85,1],[.76,.89,1]];
   for(let i=0;i<N;i++){
-    const r=600+Math.random()*1200,t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);
+    const r=1500+Math.random()*2500,t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);
     pos[i*3]=r*Math.sin(p)*Math.cos(t);pos[i*3+1]=r*Math.sin(p)*Math.sin(t);pos[i*3+2]=r*Math.cos(p);
-    const c=pal[Math.floor(Math.random()*pal.length)],b=.3+Math.random()*.7;
-    col[i*3]=c[0]*b;col[i*3+1]=c[1]*b;col[i*3+2]=c[2]*b;
+    const pc=pal[Math.floor(Math.random()*pal.length)],br=.25+Math.random()*.75;
+    col[i*3]=pc[0]*br;col[i*3+1]=pc[1]*br;col[i*3+2]=pc[2]*br;
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('color',new THREE.BufferAttribute(col,3));
-  scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:.55,vertexColors:true,transparent:true,opacity:.9,sizeAttenuation:true})));
+  scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:.5,vertexColors:true,transparent:true,opacity:.85,sizeAttenuation:true})));
 })();
 
 // Sun
 const sunMesh=new THREE.Mesh(new THREE.SphereGeometry(4.5,32,32),new THREE.MeshBasicMaterial({color:0xffe850}));
+sunMesh.userData={bid:'sun'};
 scene.add(sunMesh);
-function makeGlowTex(S=256,inner='rgba(255,250,180,.9)',outer='rgba(255,100,20,0)'){
-  const cv=document.createElement('canvas');cv.width=cv.height=S;
-  const g=cv.getContext('2d');
-  const grd=g.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
-  grd.addColorStop(0,inner);grd.addColorStop(.35,'rgba(255,180,50,.35)');grd.addColorStop(1,outer);
-  g.fillStyle=grd;g.fillRect(0,0,S,S);return new THREE.CanvasTexture(cv);
+const sunGlowSp=new THREE.Sprite(new THREE.SpriteMaterial({map:makeGlowTex(256,'rgba(255,248,188,.85)','rgba(0,0,0,0)'),color:0xffcc00,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));
+sunGlowSp.scale.set(32,32,1);scene.add(sunGlowSp);
+
+// Mesh registries
+const P_MESH={},P_ATMO={},P_GLOW={};  // planet id → THREE.Mesh
+const M_MESH={};                        // moon id → THREE.Mesh
+const M_OL={};                          // moon id → orbit line (moves with parent each frame)
+const SIM={};                           // body id → {rad,grav,atm}
+const TEX_DIRTY={};                     // planet id → bool
+
+function makeOrbitLine(r,col=0x002244,alpha=.38){
+  const pts=[];
+  for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r));}
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:col,transparent:true,opacity:alpha}));
 }
-const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:makeGlowTex(),color:0xffcc00,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));
-sunGlow.scale.set(32,32,1); scene.add(sunGlow);
 
-// Planet meshes
-const pMesh={}, pAtm={}, pGlow={}, mMesh={};
-const simS={}; // per-body slider state
+// Atmosphere color map
+const ATMO_COLS={
+  mercury:[180,185,212],venus:[240,210,80],mars:[210,112,62],
+  jupiter:[200,162,84],saturn:[220,192,112],uranus:[80,222,222],neptune:[60,100,242]
+};
 
-BODIES.forEach(b=>{
-  simS[b.id]={rad:1,grav:1,atm:.5};
-  // Orbit line
-  const pts=[]; const orr=b.a*AU;
-  for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*orr,0,Math.sin(a)*orr));}
-  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x002244,transparent:true,opacity:.4})));
+BODIES.forEach(pl=>{
+  SIM[pl.id]={rad:1,grav:1,atm:.5};
+  TEX_DIRTY[pl.id]=false;
 
-  // Planet
-  const tex=makeTexture(b,1.0,.5);
-  const mat=new THREE.MeshPhongMaterial({map:tex,shininess:20,specular:new THREE.Color(.08,.08,.1)});
-  const mesh=new THREE.Mesh(new THREE.SphereGeometry(b.size,48,48),mat);
-  mesh.userData={bid:b.id,type:'planet'};
-  scene.add(mesh); pMesh[b.id]=mesh;
+  // Planet orbit line
+  scene.add(makeOrbitLine(logOrb(pl.a)));
 
-  // Atmo shell
-  const atmGeo=new THREE.SphereGeometry(b.size*1.22,32,32);
-  const atmMat=makeAtmoShell(b,.5);
-  const atmMesh=new THREE.Mesh(atmGeo,atmMat);
-  mesh.add(atmMesh); pAtm[b.id]=atmMesh;
+  // Planet mesh
+  const mat=new THREE.MeshPhongMaterial({
+    map:makePlanetTex(pl,1,.5),shininess:24,
+    specular:new THREE.Color(.06,.06,.08)
+  });
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(pl.sz,52,52),mat);
+  mesh.userData={bid:pl.id,type:'planet'};
+  scene.add(mesh);P_MESH[pl.id]=mesh;
+
+  // Atmo shader
+  const ac=ATMO_COLS[pl.id]||[100,180,255];
+  const atmoMat=makeAtmoShader(ac[0],ac[1],ac[2]);
+  const atmoMesh=new THREE.Mesh(new THREE.SphereGeometry(pl.sz*1.3,32,32),atmoMat);
+  mesh.add(atmoMesh);P_ATMO[pl.id]=atmoMesh;
 
   // Glow sprite
-  const gcol=new THREE.Color(b.col);
-  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:makeGlowTex(128,`rgba(${Math.round(gcol.r*255)},${Math.round(gcol.g*255)},${Math.round(gcol.b*255)},.5)`,'rgba(0,0,0,0)'),color:b.col,transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false}));
-  gl.scale.set(b.size*4,b.size*4,1); mesh.add(gl); pGlow[b.id]=gl;
+  const gc=new THREE.Color(pl.col);
+  const glowSp=new THREE.Sprite(new THREE.SpriteMaterial({
+    map:makeGlowTex(128,`rgba(${Math.round(gc.r*255)},${Math.round(gc.g*255)},${Math.round(gc.b*255)},.5)`,'rgba(0,0,0,0)'),
+    color:pl.col,transparent:true,opacity:.24,blending:THREE.AdditiveBlending,depthWrite:false
+  }));
+  glowSp.scale.set(pl.sz*4.8,pl.sz*4.8,1);
+  mesh.add(glowSp);P_GLOW[pl.id]=glowSp;
 
   // Rings
-  if(b.rings){
-    if(b.saturn){
-      // Detailed Saturn rings (5 bands)
-      const ringDefs=[
-        {i:1.52,o:1.68,col:0xb09070,a:.35},{i:1.68,o:1.95,col:0xd0b88a,a:.6},
-        {i:1.97,o:2.26,col:0xc0a878,a:.45},{i:2.28,o:2.38,col:0xb09070,a:.2},
-        {i:2.42,o:2.65,col:0xa88860,a:.1}
-      ];
-      ringDefs.forEach(rd=>{
-        const rg=new THREE.RingGeometry(b.size*rd.i,b.size*rd.o,64);
-        // fix UVs
-        const pos=rg.attributes.position;const uv=rg.attributes.uv;
-        for(let i=0;i<pos.count;i++){const v=new THREE.Vector3().fromBufferAttribute(pos,i);uv.setXY(i,(v.length()-b.size*rd.i)/(b.size*(rd.o-rd.i)),0);}
-        const rm=new THREE.MeshBasicMaterial({color:rd.col,transparent:true,opacity:rd.a,side:THREE.DoubleSide,depthWrite:false});
-        const ring=new THREE.Mesh(rg,rm); ring.rotation.x=Math.PI/2.15; mesh.add(ring);
-      });
+  if(pl.rings){
+    if(pl.saturn){
+      const rTex=makeSaturnRingTex();
+      const rGeo=new THREE.RingGeometry(pl.sz*1.52,pl.sz*2.68,96);
+      const posA=rGeo.attributes.position,uvA=rGeo.attributes.uv;
+      const inn=pl.sz*1.52,out=pl.sz*2.68;
+      for(let i=0;i<posA.count;i++){
+        const v=new THREE.Vector3().fromBufferAttribute(posA,i);
+        uvA.setXY(i,(v.length()-inn)/(out-inn),0);
+      }
+      const rMat=new THREE.MeshBasicMaterial({map:rTex,transparent:true,opacity:.78,side:THREE.DoubleSide,depthWrite:false});
+      mesh.add(new THREE.Mesh(rGeo,rMat));
+      mesh.children[mesh.children.length-1].rotation.x=Math.PI/2.12;
     } else {
-      const rg=new THREE.RingGeometry(b.size*b.ringInner,b.size*b.ringOuter,64);
-      const rm=new THREE.MeshBasicMaterial({color:b.col,transparent:true,opacity:b.ringAlpha,side:THREE.DoubleSide,depthWrite:false});
-      const ring=new THREE.Mesh(rg,rm);
-      ring.rotation.x=b.uranus?Math.PI*.05:Math.PI/2; mesh.add(ring);
+      const rGeo=new THREE.RingGeometry(pl.sz*pl.ringInner,pl.sz*pl.ringOuter,64);
+      const rMat=new THREE.MeshBasicMaterial({color:pl.col,transparent:true,opacity:pl.ringAlpha,side:THREE.DoubleSide,depthWrite:false});
+      const ringM=new THREE.Mesh(rGeo,rMat);
+      ringM.rotation.x=pl.uranus?Math.PI*.06:Math.PI/2;
+      mesh.add(ringM);
     }
   }
 
-  // MOONS
-  const moons=MOONS_DATA[b.id]||[];
-  moons.forEach(m=>{
-    simS[m.id]={rad:simS[b.id].rad,grav:1,atm:.2};
-    const mtex=makeMoonTexture(m);
-    const mmat=new THREE.MeshPhongMaterial({map:mtex,shininess:10});
-    const mmesh=new THREE.Mesh(new THREE.SphereGeometry(m.size,24,24),mmat);
-    mmesh.userData={bid:m.id,type:'moon',parent:b.id};
-    scene.add(mmesh); mMesh[m.id]=mmesh;
+  // Moons
+  pl.moons.forEach(mn=>{
+    SIM[mn.id]={rad:1,grav:1,atm:.12};
+    const mmat=new THREE.MeshPhongMaterial({map:makeMoonTex(mn),shininess:8});
+    const mmesh=new THREE.Mesh(new THREE.SphereGeometry(mn.sz,22,22),mmat);
+    mmesh.userData={bid:mn.id,type:'moon',parentId:pl.id};
+    scene.add(mmesh);M_MESH[mn.id]=mmesh;
     // Moon glow
-    const mg=new THREE.Sprite(new THREE.SpriteMaterial({map:makeGlowTex(64),color:m.col,transparent:true,opacity:.15,blending:THREE.AdditiveBlending,depthWrite:false}));
-    mg.scale.set(m.size*3,m.size*3,1); mmesh.add(mg);
-    // Moon orbit ring (faint)
-    const opts=[]; const mr=m.orb;
-    for(let i=0;i<=64;i++){const a=i/64*Math.PI*2;opts.push(new THREE.Vector3(Math.cos(a)*mr,0,Math.sin(a)*mr));}
-    const oLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(opts),new THREE.LineBasicMaterial({color:0x002233,transparent:true,opacity:.3}));
-    // moon orbit lines will be repositioned each frame — add to scene, track parent
-    oLine.userData={moonId:m.id};
-    scene.add(oLine);
-    mmesh.userData.orbitLine=oLine;
+    const mgc=new THREE.Color(mn.col);
+    const mgl=new THREE.Sprite(new THREE.SpriteMaterial({
+      map:makeGlowTex(64,`rgba(${Math.round(mgc.r*255)},${Math.round(mgc.g*255)},${Math.round(mgc.b*255)},.38)`,'rgba(0,0,0,0)'),
+      transparent:true,opacity:.14,blending:THREE.AdditiveBlending,depthWrite:false
+    }));
+    mgl.scale.set(mn.sz*4,mn.sz*4,1);mmesh.add(mgl);
+    // Moon orbit line
+    const mol=makeOrbitLine(mn.orb,0x002233,.26);
+    scene.add(mol);M_OL[mn.id]=mol;
   });
 });
 
-// Also expose Europa's simstate under 'europa'
-simS['europa']=simS['europa']||{rad:1,grav:1,atm:.2};
-
-// ═══════════════════════════════════════════════════
-//  SIM STATE & VISUAL EFFECTS
-// ═══════════════════════════════════════════════════
-// Solar wind particles
-const SWP_MAX=3000;
-const swpPos=new Float32Array(SWP_MAX*3);
-const swpCol=new Float32Array(SWP_MAX*3);
-const swpGeo=new THREE.BufferGeometry();
-swpGeo.setAttribute('position',new THREE.BufferAttribute(swpPos,3));
-swpGeo.setAttribute('color',new THREE.BufferAttribute(swpCol,3));
-const swpMat=new THREE.PointsMaterial({size:.45,vertexColors:true,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false});
-const swpMesh=new THREE.Points(swpGeo,swpMat);
-scene.add(swpMesh);
-
-const swParticles=[];
-function spawnSolarWind(radN){
-  const N=Math.ceil(radN*4);
-  for(let i=0;i<N;i++){
-    const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
-    const r=6; // near sun
-    swParticles.push({
-      x:r*Math.sin(phi)*Math.cos(theta),y:r*Math.sin(phi)*Math.sin(theta)*.2,z:r*Math.sin(phi)*Math.sin(theta),
-      vx:Math.sin(phi)*Math.cos(theta)*(1.5+radN*1.2),
-      vy:Math.sin(phi)*Math.sin(theta)*.15*(1.5+radN),
-      vz:Math.sin(phi)*Math.sin(theta)*(1.5+radN*1.2),
-      life:1, maxR:Math.random()*120+40,
-      r:radN>1.5?1:.7, g:radN>1.5?.4:.75, b:radN>1.5?.1:.9
-    });
+// ── SOLAR WIND PARTICLES ──
+const SW_MAX=4000;
+const swBuf={pos:new Float32Array(SW_MAX*3),col:new Float32Array(SW_MAX*3)};
+const swGeo=new THREE.BufferGeometry();
+swGeo.setAttribute('position',new THREE.BufferAttribute(swBuf.pos,3));
+swGeo.setAttribute('color',new THREE.BufferAttribute(swBuf.col,3));
+const swMesh=new THREE.Points(swGeo,new THREE.PointsMaterial({size:.42,vertexColors:true,transparent:true,opacity:.68,blending:THREE.AdditiveBlending,depthWrite:false}));
+scene.add(swMesh);
+const swP=[];
+function spawnSW(rN){
+  const n=Math.ceil(rN*5);
+  for(let i=0;i<n;i++){
+    const t2=Math.random()*Math.PI*2,p2=Math.acos(2*Math.random()-1);const r2=5.5;
+    swP.push({x:r2*Math.sin(p2)*Math.cos(t2),y:r2*Math.sin(p2)*Math.sin(t2)*.18,z:r2*Math.sin(p2)*Math.sin(t2),
+      vx:Math.sin(p2)*Math.cos(t2)*(1.8+rN*1.5),vy:Math.sin(p2)*Math.sin(t2)*.14*(1.8+rN),vz:Math.sin(p2)*Math.sin(t2)*(1.8+rN*1.5),
+      life:1,maxR:70+Math.random()*80,r:rN>1.8?1:.7,g2:rN>1.8?.36:.72,b:rN>1.5?.12:.92});
   }
-  // trim
-  while(swParticles.length>SWP_MAX) swParticles.shift();
+  while(swP.length>SW_MAX)swP.shift();
 }
-function updateSolarWindGPU(){
-  for(let i=0;i<swParticles.length;i++){
-    const p=swParticles[i];
-    const idx=i*3;
-    swpPos[idx]=p.x;swpPos[idx+1]=p.y;swpPos[idx+2]=p.z;
-    swpCol[idx]=p.r*p.life;swpCol[idx+1]=p.g*p.life*.8;swpCol[idx+2]=p.b*p.life;
+function flushSW(){
+  for(let i=0;i<swP.length;i++){
+    const p2=swP[i],idx=i*3;
+    swBuf.pos[idx]=p2.x;swBuf.pos[idx+1]=p2.y;swBuf.pos[idx+2]=p2.z;
+    swBuf.col[idx]=p2.r*p2.life;swBuf.col[idx+1]=p2.g2*p2.life*.8;swBuf.col[idx+2]=p2.b*p2.life;
   }
-  // zero rest
-  for(let i=swParticles.length;i<SWP_MAX;i++){swpPos[i*3]=swpPos[i*3+1]=swpPos[i*3+2]=9999;}
-  swpGeo.attributes.position.needsUpdate=true;
-  swpGeo.attributes.color.needsUpdate=true;
+  for(let i=swP.length;i<SW_MAX;i++)swBuf.pos[i*3]=swBuf.pos[i*3+1]=swBuf.pos[i*3+2]=9999;
+  swGeo.attributes.position.needsUpdate=true;swGeo.attributes.color.needsUpdate=true;
 }
 
-// Global max radiation for solar wind intensity
-function getMaxRad(){return Math.max(...Object.values(simS).map(s=>s.rad||1));}
-
-// Texture update throttle
-const texDirty={};
-BODIES.forEach(b=>texDirty[b.id]=true);
-let lastTexUpdate=0;
-
 // ═══════════════════════════════════════════════════
-//  ANIMATE
+//  MAIN LOOP
 // ═══════════════════════════════════════════════════
-let simTime=0, lastT=0, frameC=0, lastFpsT=performance.now();
-const raycaster=new THREE.Raycaster();
-const mouse2=new THREE.Vector2();
+let simTime=0,lastT=0,frameC=0,lastFpsT=performance.now(),lastTexT=0;
 
 function animate(){
   requestAnimationFrame(animate);
-  const now=performance.now(), dt=Math.min((now-lastT)/1000,.08); lastT=now;
-  simTime+=dt*.08;
-
+  const now=performance.now(),dt=Math.min((now-lastT)/1000,.05);lastT=now;
+  simTime+=dt*.012;
   frameC++;
   if(now-lastFpsT>600){
     document.getElementById('hfps').textContent=Math.round(frameC*1000/(now-lastFpsT))+' FPS';
     frameC=0;lastFpsT=now;
   }
-  document.getElementById('stime').textContent='T+'+simTime.toFixed(2)+'yr';
+  document.getElementById('htime').textContent='T+'+simTime.toFixed(2)+'yr';
+  document.getElementById('btime').textContent='T+'+simTime.toFixed(2)+'yr';
 
-  // Camera lerp
-  if(ct.active){
-    ct.t=Math.min(1,ct.t+dt*1.1);
-    const e=1-Math.pow(1-ct.t,3);
-    camera.position.lerpVectors(ct.sp,ct.tp,e);
-    oc.target.lerpVectors(ct.sl,ct.tl,e);
-    camera.lookAt(oc.target);
-  } else applyOC();
+  // ── UPDATE PLANET / MOON POSITIONS ──
+  BODIES.forEach(pl=>{
+    const T=pl.a**1.5,omega=Math.PI*2/T,ang=simTime*omega;
+    const r=logOrb(pl.a);
+    const px=Math.cos(ang)*r,pz=Math.sin(ang)*r;
+    const mesh=P_MESH[pl.id];
+    mesh.position.set(px,0,pz);
+    mesh.rotation.y+=dt*(pl.id==='venus'?-.28:.36);
 
-  // Solar wind
-  const maxRad=getMaxRad();
-  spawnSolarWind(maxRad);
-  for(let i=swParticles.length-1;i>=0;i--){
-    const p=swParticles[i];
-    const dist=Math.hypot(p.x,p.y,p.z);
-    p.life-=.008+.004*(maxRad-1);
-    if(p.life<=0||dist>p.maxR){swParticles.splice(i,1);continue;}
-    p.x+=p.vx*dt*60; p.y+=p.vy*dt*60; p.z+=p.vz*dt*60;
-  }
-  updateSolarWindGPU();
-
-  // Planets & moons
-  BODIES.forEach(b=>{
-    const T=Math.pow(b.a,1.5);
-    const ang=simTime*(Math.PI*2/T);
-    const r=b.a*AU;
-    const bx=Math.cos(ang)*r, bz=Math.sin(ang)*r;
-    const mesh=pMesh[b.id];
-    mesh.position.set(bx,0,bz);
-    mesh.rotation.y+=dt*(b.id==='venus'?-.25:.35);
-
-    const ss=simS[b.id];
-    // Update texture if slider changed
-    if(texDirty[b.id]&&now-lastTexUpdate>100){
-      mesh.material.map=makeTexture(b,ss.rad,ss.atm);
+    // Rebuild texture when slider changed (throttled)
+    if(TEX_DIRTY[pl.id]&&now-lastTexT>90){
+      const ss=SIM[pl.id];
+      mesh.material.map=makePlanetTex(pl,ss.rad,ss.atm);
       mesh.material.map.needsUpdate=true;
-      texDirty[b.id]=false; lastTexUpdate=now;
+      TEX_DIRTY[pl.id]=false;lastTexT=now;
     }
 
-    // Atmosphere shell scale/opacity
-    const atmN=ss.atm;
-    pAtm[b.id].material.opacity=atmN*.22+.025+Math.max(0,ss.rad-1)*.08;
-    pAtm[b.id].scale.setScalar(1+(atmN*.18+Math.max(0,ss.rad-1)*.12));
-
-    // Glow scale (atm + radiation)
-    const gs=1+atmN*.7+Math.max(0,ss.rad-1)*.9;
-    pGlow[b.id].scale.set(b.size*4*gs,b.size*4*gs,1);
-    pGlow[b.id].material.opacity=.18+atmN*.15+Math.max(0,ss.rad-1)*.2;
-
-    // Emissive (heat glow when radiation high)
-    const heat=Math.max(0,ss.rad-1);
-    const ec=new THREE.Color(b.emcol);
-    mesh.material.emissive.set(ec.r*heat*.6,ec.g*heat*.4,ec.b*heat*.2);
-    mesh.material.emissiveIntensity=heat*.5;
+    // Atmosphere shader update
+    const ss=SIM[pl.id],heat=Math.max(0,ss.rad-1);
+    if(P_ATMO[pl.id]?.material?.uniforms){
+      P_ATMO[pl.id].material.uniforms.vv.value=camera.position.clone().sub(mesh.position).normalize();
+      P_ATMO[pl.id].material.uniforms.c.value=.08+ss.atm*.18+heat*.12;
+      P_ATMO[pl.id].scale.setScalar(1+ss.atm*.2+heat*.14);
+    }
+    // Glow
+    const gs=1+ss.atm*.72+heat*1.0;
+    P_GLOW[pl.id].scale.set(pl.sz*4.8*gs,pl.sz*4.8*gs,1);
+    P_GLOW[pl.id].material.opacity=.18+ss.atm*.15+heat*.22;
+    // Emissive heat
+    const ec=new THREE.Color(pl.ec);
+    mesh.material.emissive.set(ec.r*heat*.7,ec.g*heat*.45,ec.b*heat*.2);
+    mesh.material.emissiveIntensity=heat*.6;
 
     // Moons
-    const moons=MOONS_DATA[b.id]||[];
-    moons.forEach(m=>{
-      const retro=m.period<0;
-      const mT=Math.abs(m.period)/365.25;
-      const mAng=simTime*(Math.PI*2/mT)*(retro?-1:1);
-      const mx=bx+Math.cos(mAng)*m.orb, mz=bz+Math.sin(mAng)*m.orb;
-      const mmesh=mMesh[m.id];
-      mmesh.position.set(mx,0,mz);
-      mmesh.rotation.y+=dt*.4;
-      // Moon orbit line follows parent
-      if(mmesh.userData.orbitLine){
-        mmesh.userData.orbitLine.position.set(bx,0,bz);
-      }
-      // Io: volcanic glow when tidal force high
-      if(m.tidal&&ss.grav>1.2){
-        const tg=Math.max(0,ss.grav-1);
-        mmesh.material.emissive=new THREE.Color(tg*.4,tg*.08,0);
-        mmesh.material.emissiveIntensity=tg*.8;
-        if(pGlow[m.id]) pGlow[m.id]=null; // skip
-        const mg=mmesh.children[0];
-        if(mg&&mg.isSprite){mg.material.color.set(0xff6600);mg.material.opacity=.15+tg*.3;}
+    pl.moons.forEach(mn=>{
+      const retro=mn.T<0,mT=Math.abs(mn.T)/365.25,mOm=Math.PI*2/mT,ma=simTime*mOm*(retro?-1:1);
+      const mx=px+Math.cos(ma)*mn.orb,mz=pz+Math.sin(ma)*mn.orb;
+      M_MESH[mn.id].position.set(mx,0,mz);
+      M_MESH[mn.id].rotation.y+=dt*.38;
+      if(M_OL[mn.id])M_OL[mn.id].position.set(px,0,pz);
+      if(mn.tidal){
+        const mss=SIM[mn.id]||SIM[pl.id],tg=Math.max(0,(mss.grav||1)-1);
+        M_MESH[mn.id].material.emissive=new THREE.Color(tg*.52,tg*.08,0);
+        M_MESH[mn.id].material.emissiveIntensity=tg*.9;
+        const mgl=M_MESH[mn.id].children[0];
+        if(mgl?.isSprite){mgl.material.color.set(tg>.2?0xff5500:mn.col);mgl.material.opacity=.1+tg*.36;}
       }
     });
   });
 
+  // ── LOCK-ON: lerp camera target to live body position ──
+  if(lockedMesh){
+    // Smoothly follow the locked mesh's current world position
+    cam.orbitTarget.lerp(lockedMesh.position,.1);
+  }
+
+  // ── CAMERA TRANSITION ANIMATION ──
+  if(cam.animating){
+    cam.animT=Math.min(1,cam.animT+dt*1.0);
+    const e=1-Math.pow(1-cam.animT,4); // ease out quart
+    cam.orbitTarget.lerpVectors(cam.animFrom.target,cam.animTo.target,e);
+    cam.radius=cam.animFrom.r+(cam.animTo.r-cam.animFrom.r)*e;
+    cam.phi=cam.animFrom.phi+(cam.animTo.phi-cam.animFrom.phi)*e;
+    cam.theta=cam.animFrom.theta+(cam.animTo.theta-cam.animFrom.theta)*e;
+    if(cam.animT>=1){cam.animating=false;}
+  }
+  applyCam();
+
+  // ── SOLAR WIND ──
+  const maxRad=Math.max(...Object.values(SIM).map(s=>s.rad||1));
+  spawnSW(maxRad);
+  for(let i=swP.length-1;i>=0;i--){
+    const p2=swP[i];p2.life-=.008+.004*(maxRad-1);
+    if(p2.life<=0||Math.hypot(p2.x,p2.y,p2.z)>p2.maxR){swP.splice(i,1);continue;}
+    p2.x+=p2.vx*dt*55;p2.y+=p2.vy*dt*55;p2.z+=p2.vz*dt*55;
+  }
+  flushSW();
+
   // Sun pulse
-  const sp=1+Math.sin(simTime*5)*.02;
+  const sp=1+Math.sin(simTime*5)*.022;
   sunMesh.scale.set(sp,sp,sp);
 
-  const bc=Object.keys(pMesh).length+Object.keys(mMesh).length;
-  document.getElementById('hbodies').textContent='BODIES: '+(bc+1);
+  // Live panel update (every ~10 frames)
+  if(lockedId&&Math.floor(simTime*100)%3===0)refreshLivePanel();
 
   renderer.render(scene,camera);
 }
 animate();
 
 // ═══════════════════════════════════════════════════
-//  SIDEBAR
+//  LOCK-ON SYSTEM
 // ═══════════════════════════════════════════════════
-let selBody=null, sbTab='info';
-let miniAnim=null;
-const mParts={solar:[],impact:[]};
+function lockOn(bid){
+  const bd=ALL_BODIES[bid];if(!bd)return;
+  const mesh=P_MESH[bid]||M_MESH[bid];if(!mesh)return;
+
+  lockedId=bid;lockedMesh=mesh;
+
+  // Start smooth camera transition
+  startTransition(bid,mesh);
+
+  // Update lock badge
+  document.getElementById('lockbanner').classList.add('on');
+  document.getElementById('lbn').textContent=bd.en||bd.name;
+  document.getElementById('htrack').textContent='🔒 '+bd.en.toUpperCase();
+
+  // Show live panel & sim panel
+  document.getElementById('livepanel').classList.add('on');
+  openSP(bid);
+
+  // Highlight list item
+  document.querySelectorAll('.pl-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.bid===bid);
+  });
+
+  refreshLivePanel();
+}
+
+function releaseLock(){
+  lockedId=null;lockedMesh=null;
+  document.getElementById('lockbanner').classList.remove('on');
+  document.getElementById('htrack').textContent='FREE CAM';
+  document.getElementById('livepanel').classList.remove('on');
+  cam.minR=2;cam.maxR=2000;
+  document.querySelectorAll('.pl-item').forEach(el=>el.classList.remove('active'));
+}
+
+// ── Reset to overview ──
+function resetCamera(){
+  releaseLock();
+  cam.animFrom.target.copy(cam.orbitTarget);
+  cam.animFrom.r=cam.radius;cam.animFrom.phi=cam.phi;cam.animFrom.theta=cam.theta;
+  cam.animTo.target.set(0,0,0);cam.animTo.r=380;cam.animTo.phi=1.05;cam.animTo.theta=0.2;
+  cam.animating=true;cam.animT=0;
+  cam.minR=2;cam.maxR=2000;
+  closeSP();
+}
+
+// ═══════════════════════════════════════════════════
+//  LIVE PANEL (left center — real-time data)
+// ═══════════════════════════════════════════════════
+function refreshLivePanel(){
+  if(!lockedId)return;
+  const bd=ALL_BODIES[lockedId];if(!bd)return;
+  const ss=SIM[lockedId]||{rad:1,grav:1,atm:.5};
+  const pl=bd.isMoon?bd.parentBody:bd;
+  const distAU=pl.a||1;
+  const M=bd.mass,R=bd.radius;
+  const gv=M&&R?surfG(M,R,ss.grav).toFixed(3):'—';
+  const ev=M&&R?escVel(M,R,ss.grav).toFixed(3):'—';
+  const flux=(solFlux(distAU,ss.rad)/1e3).toFixed(2);
+  const teff=M&&R?Math.round(effTemp(distAU,bd.albedo||.3,ss.rad)+(ss.rad-1)*78)+'':'—';
+  const heat=Math.max(0,ss.rad-1);
+  const tC=typeof teff==='string'&&!isNaN(+teff)?(+teff>100?'r':+teff>0?'w':'b'):'b';
+
+  document.getElementById('lvname').textContent=bd.name;
+  document.getElementById('lven').textContent=(bd.en||'').toUpperCase();
+
+  document.getElementById('lvbody').innerHTML=`
+    <div class="lrow"><span class="lk">표면 중력</span><span class="lval b">${gv}<span style="opacity:.4;font-size:.44rem"> m/s²</span></span></div>
+    <div class="lrow"><span class="lk">탈출 속도</span><span class="lval b">${ev}<span style="opacity:.4;font-size:.44rem"> km/s</span></span></div>
+    <div class="lrow"><span class="lk">유효 온도</span><span class="lval ${tC}">${teff}°C</span></div>
+    <div class="lrow"><span class="lk">태양 복사</span><span class="lval">${flux}<span style="opacity:.4;font-size:.44rem"> kW/m²</span></span></div>
+    ${!bd.isMoon?`<div class="lrow"><span class="lk">공전 주기</span><span class="lval">${(bd.a**1.5).toFixed(2)}<span style="opacity:.4;font-size:.44rem"> yr</span></span></div>`:''}
+    ${bd.isMoon?`<div class="lrow"><span class="lk">공전 주기</span><span class="lval">${Math.abs(bd.T).toFixed(3)}<span style="opacity:.4;font-size:.44rem"> 일</span>${bd.T<0?'<span style="color:#ff5050;font-size:.46rem"> [역행]</span>':''}</span></div>`:''}
+    <div class="lsec">SIMULATION STATE</div>
+    <div class="lbar-wrap">
+      <div class="lbar-row"><span class="lbar-k">☀ 태양 복사</span><span class="lbar-v">${(ss.rad||1).toFixed(2)}×</span></div>
+      <div class="lbar"><div class="lbar-f" style="width:${Math.min(100,(ss.rad||1)/3*100)}%;background:${heat>.6?'#ff4444':heat>.2?'#ffaa00':'#00c8ff'}"></div></div>
+    </div>
+    <div class="lbar-wrap">
+      <div class="lbar-row"><span class="lbar-k">🌐 중력 배율</span><span class="lbar-v">${(ss.grav||1).toFixed(2)}×</span></div>
+      <div class="lbar"><div class="lbar-f" style="width:${Math.min(100,(ss.grav||1)/3*100)}%;background:#a855ff"></div></div>
+    </div>
+    <div class="lbar-wrap">
+      <div class="lbar-row"><span class="lbar-k">💨 대기 밀도</span><span class="lbar-v">${Math.round((ss.atm||0)*100)}%</span></div>
+      <div class="lbar"><div class="lbar-f" style="width:${(ss.atm||0)*100}%;background:#00ff88"></div></div>
+    </div>
+    ${bd.tidal?`
+    <div class="lsec">조석력</div>
+    <div class="lrow"><span class="lk">ΔF</span><span class="lval w">${(tidalF(1.898e27*(ss.grav||1),M||4.8e22,6.71e8,R||1.56e6)/1e18).toFixed(2)}×10¹⁸N</span></div>
+    <div class="lrow"><span class="lk">내부 열</span><span class="lval r">${((bd.tidalHeat||83.5e9)*(ss.grav||1)/1e9).toFixed(0)} GW</span></div>`:''}
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  SIM PANEL (right)
+// ═══════════════════════════════════════════════════
+let spBid=null,spTab='info';
+let miniRAF=null;
+const MP={solar:[],impact:[]};
 let mT=0;
 
-function openSB(bid){
-  selBody=bid;sbTab='info';
-  document.querySelectorAll('.sbt').forEach((b,i)=>b.classList.toggle('on',i===0));
-  const b=BODIES.find(x=>x.id===bid)||Object.values(MOONS_DATA).flat().find(m=>m.id===bid)||EUROPA_DATA;
-  const col=b.col?`#${new THREE.Color(b.col).getHexString()}`:'#88aacc';
-  document.getElementById('sbdot').style.background=col;
-  document.getElementById('sbdot').style.boxShadow=`0 0 8px ${col}`;
-  document.getElementById('sbname').textContent=b.name;
-  document.getElementById('sben').textContent=(b.en||'').toUpperCase();
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('xhair').classList.on&&document.getElementById('xhair').classList.add('on');
-  document.getElementById('xhair').classList.add('on');
-  renderSB();
+function openSP(bid){
+  const bd=ALL_BODIES[bid];if(!bd)return;
+  spBid=bid;spTab='info';
+  document.querySelectorAll('.sptab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  const col=bd.col?`#${new THREE.Color(bd.col).getHexString()}`:'#88aacc';
+  document.getElementById('spdot').style.cssText=`background:${col};box-shadow:0 0 8px ${col}80`;
+  document.getElementById('spname').textContent=bd.name;
+  document.getElementById('spen').textContent=(bd.en||'').toUpperCase();
+  document.getElementById('simpanel').classList.add('on');
+  renderSP();
 }
-function closeSB(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('xhair').classList.remove('on');
-  selBody=null; stopMini();
+function closeSP(){
+  document.getElementById('simpanel').classList.remove('on');
+  spBid=null;stopMini();
 }
 function swTab(tab,btn){
-  sbTab=tab;
-  document.querySelectorAll('.sbt').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on'); stopMini(); renderSB();
+  spTab=tab;document.querySelectorAll('.sptab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');stopMini();renderSP();
 }
 
-function getBodyData(bid){
-  const pl=BODIES.find(x=>x.id===bid);
-  if(pl) return{...pl,isMoon:false};
-  const all=Object.values(MOONS_DATA).flat();
-  const mn=all.find(m=>m.id===bid);
-  if(mn) return{...mn,isMoon:true};
-  if(bid==='europa') return{...EUROPA_DATA,isMoon:true};
-  return null;
-}
+function renderSP(){
+  if(!spBid)return;
+  const bd=ALL_BODIES[spBid];if(!bd)return;
+  const ss=SIM[spBid]||{rad:1,grav:1,atm:.5};
+  const pl=bd.isMoon?bd.parentBody:bd;
+  const distAU=pl.a||1;
+  const M=bd.mass,R=bd.radius;
+  const body=document.getElementById('spbody');
 
-function renderSB(){
-  if(!selBody) return;
-  const bd=getBodyData(selBody); if(!bd) return;
-  const ss=simS[selBody]||{rad:1,grav:1,atm:.5};
-  const body=document.getElementById('sbbody');
-
-  const isPlanet=!bd.isMoon;
-  const distAU=isPlanet?bd.a:BODIES.find(x=>x.id===bd.parent)?.a||5.2;
-  const M=bd.mass, R=bd.radius;
-
-  if(sbTab==='info'){
-    const gv=(M&&R)?surfG(M,R).toFixed(3):'—';
-    const ev=(M&&R)?(escV(M,R)/1000).toFixed(3):'—';
-    const flux=(sFlux(distAU,ss.rad)/1e3).toFixed(2);
-    const teff=Math.round(tEff(distAU,bd.albedo||.3,ss.rad)-273+(ss.rad-1)*60);
-    const tCol=teff>100?'r':teff>0?'w':'b';
+  if(spTab==='info'){
+    const gv=M&&R?surfG(M,R,ss.grav).toFixed(4):'—';
+    const ev=M&&R?escVel(M,R,ss.grav).toFixed(4):'—';
+    const flux=(solFlux(distAU,ss.rad)/1e3).toFixed(3);
+    const teff=M&&R?Math.round(effTemp(distAU,bd.albedo||.3,ss.rad)+(ss.rad-1)*78):'—';
+    const tC=typeof teff==='number'?(teff>100?'r':teff>0?'w':'b'):'b';
     body.innerHTML=`
       <div class="pg">
-        <div class="pb"><div class="pl">표면 중력</div><div class="pv ${gv>10?'r':gv>5?'w':'b'}">${gv}</div><div class="pu">m/s²</div></div>
-        <div class="pb"><div class="pl">탈출 속도</div><div class="pv">${ev}</div><div class="pu">km/s</div></div>
-        <div class="pb"><div class="pl">태양 복사</div><div class="pv">${flux}</div><div class="pu">kW/m²</div></div>
-        <div class="pb"><div class="pl">유효 온도</div><div class="pv ${tCol}">${teff}</div><div class="pu">°C</div></div>
+        <div class="pb"><div class="pbl">표면 중력</div><div class="pbv ${gv>10?'r':''}">${gv}</div><div class="pbu">m/s²</div></div>
+        <div class="pb"><div class="pbl">탈출 속도</div><div class="pbv">${ev}</div><div class="pbu">km/s</div></div>
+        <div class="pb"><div class="pbl">태양 복사</div><div class="pbv">${flux}</div><div class="pbu">kW/m²</div></div>
+        <div class="pb"><div class="pbl">유효 온도</div><div class="pbv ${tC}">${teff}</div><div class="pbu">°C</div></div>
       </div>
       <div class="sd">물리 특성</div>
-      ${dr2('질량',M?M.toExponential(3):'—','kg')}
-      ${dr2('반경',R?(R/1e3).toFixed(0):' —','km')}
-      ${isPlanet?dr2('태양 거리',bd.a.toFixed(3)+' AU ('+Math.round(bd.a*1.496e8)+' km)',''):''}
-      ${isPlanet?dr2('공전 주기',(bd.a**1.5).toFixed(2),'년'):''}
-      ${!isPlanet?dr2('공전 주기',Math.abs(bd.period).toFixed(3)+(bd.period<0?' <span style="color:#ff4040">[역행]</span>':''),'일'):''}
-      ${!isPlanet?dr2('모행성 거리',bd.distFromPlanet||bd.orb*100+'km(상대)',''):''}
-      ${isPlanet?dr2('자전축',bd.axialTilt!==undefined?bd.axialTilt+'°':'—',''):''}
-      <div class="sd">대기 / 자기장</div>
-      ${isPlanet?`<p class="pt">${bd.atm}</p><p class="pt">${bd.mag}</p>`:'<p class="pt">위성 대기 미확인</p>'}
-      <div class="sd">개요</div>
-      <p class="pt">${bd.desc||''}</p>
-      ${bd.tidal?`
-      <div class="tp">
-        <div class="tt">🌊 조석력 분석 (목성↔${bd.name})</div>
-        ${dr2('조석력 ΔF=2GMmΔr/d³',(tidalF(1.898e27*(ss.grav||1),bd.mass||4.8e22,6.71e8,bd.radius||1.56e6)/1e18).toFixed(2),'×10¹⁸ N','w')}
-        ${dr2('내부 열',bd.tidalHeat?(bd.tidalHeat*(ss.grav||1)/1e9).toFixed(0):'—','GW','r')}
-        ${dr2('생명체 가능성',(ss.grav||1)>1.2?'★★★ 매우 높음':(ss.grav||1)>0.8?'★★ 높음':'★ 보통','','g')}
-      </div>`:''}
-      ${isPlanet&&MOONS_DATA[bd.id]?.length?`
-      <div class="sd">위성 (${MOONS_DATA[bd.id].length}개)</div>
-      <div class="ml">${MOONS_DATA[bd.id].map(m=>`<span class="mc" onclick="clickMoon('${m.id}')"><span class="md" style="background:#${new THREE.Color(m.col).getHexString()}"></span>${m.name}</span>`).join('')}</div>`:''}
+      ${dr('질량',M?M.toExponential(3):'—','kg')}
+      ${dr('반경',R?(R/1e3).toFixed(1):'—','km')}
+      ${dr('알베도',(bd.albedo||.3).toFixed(3),'')}
+      ${!bd.isMoon?dr('태양 거리',pl.a.toFixed(3)+' AU','')+dr('공전 주기',(pl.a**1.5).toFixed(3),'년'):''}
+      ${bd.isMoon?dr('공전 주기',Math.abs(bd.T).toFixed(4)+(bd.T<0?' <span style="color:#ff5050">[역행]</span>':''),'일'):''}
+      <div class="sd">대기 · 자기장</div>
+      ${!bd.isMoon?`<p class="pt">${pl.atm}</p><p class="pt">${pl.mag}</p>`:'<p class="pt">대기 극미량</p>'}
+      <div class="sd">개요</div><p class="pt">${bd.desc}</p>
+      ${bd.tidal?`<div class="tp"><div class="tt">🌊 조석력 분석</div>
+        ${dr('ΔF=2GMmΔr/d³',(tidalF(1.898e27*(ss.grav||1),M||4.8e22,6.71e8,R||1.56e6)/1e18).toFixed(3),'×10¹⁸N','w')}
+        ${dr('내부 열',((bd.tidalHeat||83.5e9)*(ss.grav||1)/1e9).toFixed(1),'GW','r')}
+        ${dr('생명체 가능성',(ss.grav||1)>1.2?'★★★ 매우 높음':'★★ 높음','','g')}</div>`:''}
+      ${!bd.isMoon&&pl.moons.length?`<div class="sd">위성 (${pl.moons.length}개)</div>
+      <div class="ml">${pl.moons.map(m=>`<span class="mc" onclick="lockOn('${m.id}')"><span class="mcd" style="background:#${new THREE.Color(m.col).getHexString()}"></span>${m.name}</span>`).join('')}</div>`:''}
     `;
-  } else if(sbTab==='sim'){
+  } else if(spTab==='sim'){
     body.innerHTML=`
       <div class="sd">외부 요인 제어</div>
       <div class="slb">
-        <div class="slh"><span class="sll">☀ SOLAR RADIATION</span><span class="slv" id="sv-r">${(ss.rad).toFixed(2)}×</span></div>
-        <input type="range" min=".1" max="3" step=".01" value="${ss.rad}" oninput="updSl('${selBody}','rad',this.value)">
-        <div class="sld">강도 증가 → 행성 색조 적색화·온도 상승·대기 이온화·오로라 강화</div>
+        <div class="slh"><span class="sll">☀ SOLAR RADIATION</span><span class="slv" id="svr">${(ss.rad).toFixed(2)}×</span></div>
+        <input type="range" min=".1" max="3" step=".01" value="${ss.rad}" oninput="upd('${spBid}','rad',this.value)">
+        <div class="sld">증가→행성 적색화·온도 상승·자기권 압축·오로라 강화</div>
       </div>
       <div class="slb">
-        <div class="slh"><span class="sll">🌐 GRAVITY CONSTANT</span><span class="slv" id="sv-g">${(ss.grav).toFixed(2)}×</span></div>
-        <input type="range" min=".1" max="3" step=".01" value="${ss.grav}" oninput="updSl('${selBody}','grav',this.value)">
-        <div class="sld">v_esc=√(2GM_mod/R) 실시간 재계산. 조석 위성은 내부 가열 연동.</div>
+        <div class="slh"><span class="sll">🌐 GRAVITY × G</span><span class="slv" id="svg2">${(ss.grav).toFixed(2)}×</span></div>
+        <input type="range" min=".1" max="3" step=".01" value="${ss.grav}" oninput="upd('${spBid}','grav',this.value)">
+        <div class="sld">v_esc=√(2G_mod·M/R) 실시간 재계산. 조석 위성 내부열 연동.</div>
       </div>
       <div class="slb">
-        <div class="slh"><span class="sll">💨 ATMOSPHERIC DENSITY</span><span class="slv" id="sv-a">${Math.round(ss.atm*100)}%</span></div>
-        <input type="range" min="0" max="1" step=".01" value="${ss.atm}" oninput="updSl('${selBody}','atm',this.value)">
-        <div class="sld">증가 → 광륜 확장·산란 효과·충돌 방어율 상승·극지 얼음 변화</div>
+        <div class="slh"><span class="sll">💨 ATMOSPHERIC DENSITY</span><span class="slv" id="sva2">${Math.round(ss.atm*100)}%</span></div>
+        <input type="range" min="0" max="1" step=".01" value="${ss.atm}" oninput="upd('${spBid}','atm',this.value)">
+        <div class="sld">증가→광륜 확장·충돌 방어율↑·극관 변화</div>
       </div>
       <div class="sd">실시간 시뮬레이션</div>
-      <div class="fcw"><div class="fcl">☀ 태양풍 · 자기권</div><canvas class="fc" id="mc-s" height="90"></canvas></div>
-      <div class="fcw"><div class="fcl">🌐 중력장 · 조석 변형</div><canvas class="fc" id="mc-g" height="90"></canvas></div>
-      <div class="fcw"><div class="fcl">☄ 충돌 · 대기 방어</div><canvas class="fc" id="mc-i" height="90"></canvas></div>
-      ${bd.tidal?'<div class="fcw"><div class="fcl">🌊 목성 기조력 · 내부열</div><canvas class="fc" id="mc-t" height="90"></canvas></div>':''}
-      <p style="font-size:.5rem;color:rgba(0,200,255,.18);margin-top:8px;line-height:1.7">NASA JPL / NIST 2018 데이터 기반 계산</p>
+      <div class="fcw"><div class="fcl">☀ 태양풍 · 자기권</div><canvas class="fc" id="mcs" height="82"></canvas></div>
+      <div class="fcw"><div class="fcl">🌐 중력장 · 조석 변형</div><canvas class="fc" id="mcg" height="82"></canvas></div>
+      <div class="fcw"><div class="fcl">☄ 충돌 · 대기 방어</div><canvas class="fc" id="mci" height="82"></canvas></div>
+      ${bd.tidal?'<div class="fcw"><div class="fcl">🌊 기조력 · 내부열</div><canvas class="fc" id="mct" height="82"></canvas></div>':''}
     `;
-    setTimeout(()=>startMini(selBody),60);
+    setTimeout(()=>startMini(spBid),55);
   } else {
-    // physics tab
-    const gmod=ss.grav||1;
+    const gm=ss.grav||1;
     body.innerHTML=`
       <div class="sd">뉴턴 중력</div>
-      ${dr2('G','6.674×10⁻¹¹','N·m²/kg²')}
-      ${dr2('M',M?M.toExponential(3):'—','kg')}
-      ${dr2('R',R?R.toExponential(3):'—','m')}
-      ${dr2('g = GM/R²',(M&&R)?((G*M*gmod)/(R*R)).toFixed(4):'—','m/s²','b')}
-      ${dr2('v_esc = √(2GM_G/R)',(M&&R)?(escV(M,R,gmod)/1000).toFixed(4):'—','km/s','b')}
-      <div class="sd">케플러 법칙</div>
-      ${isPlanet?`
-      ${dr2('a',bd.a.toFixed(3),'AU')}
-      ${dr2('T = a^1.5',(bd.a**1.5).toFixed(4),'지구년')}
-      ${dr2('v_orb = √(GM☉/a)',(Math.sqrt(G*SUN_M/(bd.a*AU_M))/1e3).toFixed(2),'km/s','b')}
-      `:`${dr2('공전주기',Math.abs(bd.period).toFixed(4),'일')}${dr2('궤도 방향',bd.period<0?'역행(Retrograde)':'순행(Prograde)','')}`}
+      ${dr('G','6.674×10⁻¹¹','N·m²/kg²')}
+      ${dr('g = GM_mod/R²',M&&R?surfG(M,R,gm).toFixed(5):'—','m/s²','b')}
+      ${dr('v_esc = √(2G_mod·M/R)',M&&R?escVel(M,R,gm).toFixed(5):'—','km/s','b')}
+      <div class="sd">케플러 3법칙</div>
+      ${!bd.isMoon?dr('T = a^1.5',(pl.a**1.5).toFixed(4),'yr')+dr('v_orb = √(GM☉/a)',(Math.sqrt(G*SUN_M/(pl.a*AU_M))/1e3).toFixed(3),'km/s','b'):''}
+      ${bd.isMoon?dr('공전 주기',Math.abs(bd.T).toFixed(4)+(bd.T<0?' [역행]':''),'일'):''}
       <div class="sd">태양 복사</div>
-      ${dr2('L☉','3.828×10²⁶','W')}
-      ${dr2('F=L☉/4πd²',(sFlux(distAU,ss.rad)/1e3).toFixed(3),'kW/m²','b')}
-      ${dr2('알베도 A',(bd.albedo||.3).toFixed(2),'')}
-      ${dr2('T_eff',(tEff(distAU,bd.albedo||.3,ss.rad)-273+(ss.rad-1)*60).toFixed(1),'°C',ss.rad>1.5?'r':ss.rad>1?'w':'b')}
-      ${bd.tidal?`
-      <div class="sd">기조력 (목성-${bd.name})</div>
-      ${dr2('ΔF=2GMmΔr/d³',(tidalF(1.898e27*gmod,bd.mass||4.8e22,6.71e8,bd.radius||1.56e6)/1e18).toFixed(3),'×10¹⁸N','w')}
-      ${dr2('조석 가열',(bd.tidalHeat||83.5e9)*gmod/1e9+'','GW','r')}
-      ${dr2('얼음 두께 추정',Math.round((bd.iceThick||15e3)/1e3/(gmod*.5+.5)),'km','b')}
-      <p style="font-size:.58rem;color:rgba(255,165,0,.45);line-height:1.65;margin-top:7px">이오:에우로파:가니메데 4:2:1 라플라스 공명 → 이심률 유지 → 주기적 조석 변화 → 내부 마찰열</p>
-      `:''}
-      <p style="font-size:.48rem;color:rgba(0,200,255,.18);margin-top:10px;line-height:1.7">σ=5.67×10⁻⁸ W/m²K⁴ · G=6.674×10⁻¹¹ N·m²/kg²<br>Source: NASA JPL Planetary Fact Sheets</p>
+      ${dr('F = L☉/(4πd²)',(solFlux(distAU,ss.rad)/1e3).toFixed(4),'kW/m²','b')}
+      ${dr('T_eff',M&&R?Math.round(effTemp(distAU,bd.albedo||.3,ss.rad)+(ss.rad-1)*78)+'':'—','°C',ss.rad>1.5?'r':ss.rad>1?'w':'b')}
+      ${bd.tidal?`<div class="sd">기조력 방정식</div>
+      ${dr('ΔF=2GMmΔr/d³',(tidalF(1.898e27*gm,M||4.8e22,6.71e8,R||1.56e6)/1e18).toFixed(4),'×10¹⁸N','w')}
+      ${dr('조석 가열',((bd.tidalHeat||83.5e9)*gm/1e9).toFixed(2),'GW','r')}`:''}
+      <p style="font-size:.44rem;color:rgba(0,200,255,.15);margin-top:8px;line-height:1.65">σ=5.67×10⁻⁸ W/m²K⁴ · G=6.674×10⁻¹¹ N·m²/kg²<br>NASA JPL Planetary Fact Sheets</p>
     `;
   }
 }
 
-function dr2(k,v,u,cls=''){
-  return`<div class="dr"><span class="dk">${k}</span><span class="dv ${cls}">${v}${u?` <span style="opacity:.35;font-size:.48rem">${u}</span>`:''}</span></div>`;
+function dr(k,v,u,cls=''){
+  return`<div class="dr"><span class="dk">${k}</span><span class="dv ${cls}">${v}${u?` <span style="opacity:.3;font-size:.44rem">${u}</span>`:''}</span></div>`;
 }
-function updSl(bid,param,val){
+function upd(bid,param,val){
   const v=parseFloat(val);
-  if(!simS[bid]) simS[bid]={rad:1,grav:1,atm:.5};
-  simS[bid][param]=v;
-  if(document.getElementById('sv-r')) document.getElementById('sv-r').textContent=(simS[bid].rad||1).toFixed(2)+'×';
-  if(document.getElementById('sv-g')) document.getElementById('sv-g').textContent=(simS[bid].grav||1).toFixed(2)+'×';
-  if(document.getElementById('sv-a')) document.getElementById('sv-a').textContent=Math.round((simS[bid].atm||0)*100)+'%';
-  // Mark texture dirty
-  if(!getBodyData(bid)?.isMoon) texDirty[bid]=true;
-  // If it's a moon of Jupiter, also update tidal visuals
-  if(sbTab==='phys') renderSB();
+  if(!SIM[bid])SIM[bid]={rad:1,grav:1,atm:.5};
+  SIM[bid][param]=v;
+  if(document.getElementById('svr'))document.getElementById('svr').textContent=(SIM[bid].rad||1).toFixed(2)+'×';
+  if(document.getElementById('svg2'))document.getElementById('svg2').textContent=(SIM[bid].grav||1).toFixed(2)+'×';
+  if(document.getElementById('sva2'))document.getElementById('sva2').textContent=Math.round((SIM[bid].atm||0)*100)+'%';
+  if(!ALL_BODIES[bid]?.isMoon)TEX_DIRTY[bid]=true;
+  if(spTab==='phys')renderSP();
+  refreshLivePanel();
 }
 
-// ═══════════════════════════════════════════════════
-//  MINI SIMULATORS
-// ═══════════════════════════════════════════════════
-function stopMini(){if(miniAnim){cancelAnimationFrame(miniAnim);miniAnim=null;}mParts.solar=[];mParts.impact=[];}
-function getMC(id){
-  const c=document.getElementById('mc-'+id); if(!c)return null;
-  if(!c._ok){c.width=c.offsetWidth||300;c.height=90;c._ok=true;} return c.getContext('2d');
-}
-
+// ── MINI SIMULATORS ──
+function stopMini(){if(miniRAF){cancelAnimationFrame(miniRAF);miniRAF=null;}MP.solar=[];MP.impact=[];}
+function gmc2(id){const c=document.getElementById('mc'+id);if(!c)return null;if(!c._ok){c.width=c.offsetWidth||285;c.height=82;c._ok=true;}return c.getContext('2d');}
 function startMini(bid){
-  stopMini(); mT=0;
-  function tick(){
-    mT++;
-    const ss=simS[bid]||{rad:1,grav:1,atm:.5};
-    const bd=getBodyData(bid);
-    drawMSolar(ss,bd); drawMGrav(ss,bd); drawMImpact(ss,bd);
-    if(bd?.tidal) drawMTidal(ss,bd);
-    miniAnim=requestAnimationFrame(tick);
-  }
+  stopMini();mT=0;
+  const tick=()=>{mT++;const ss=SIM[bid]||{rad:1,grav:1,atm:.5};const bd=ALL_BODIES[bid];
+    ms(ss,bd);mg2(ss,bd);mi(ss,bd);if(bd?.tidal)mt2(ss,bd);miniRAF=requestAnimationFrame(tick);};
   tick();
 }
-
-function drawMSolar(ss,bd){
-  const g=getMC('s');if(!g)return;
-  const W=g.canvas.width,H=g.canvas.height,cx=W/2,cy=H/2;
-  g.fillStyle='rgba(0,1,8,.22)';g.fillRect(0,0,W,H);
-  const rN=ss.rad;
-  // spawn
-  const spN=Math.ceil(rN*7);
-  for(let i=0;i<spN;i++) mParts.solar.push({
-    x:-4,y:Math.random()*H,vx:2.5+rN*3,vy:(Math.random()-.5)*.8,life:1,
-    r:rN>1.8?255:rN>1.2?220:80, g2:rN>1.8?60:rN>1.2?120:160, b:rN>1.5?20:200
-  });
-  mParts.solar=mParts.solar.filter(p=>p.life>0);
-  mParts.solar.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;p.life-=.011;
-    if(p.x>W||p.y<0||p.y>H){p.life=0;return;}
-    if(Math.hypot(p.x-cx,p.y-cy)<18){p.life=0;return;}
-    g.beginPath();g.moveTo(p.x-p.vx*5,p.y);g.lineTo(p.x,p.y);
-    g.strokeStyle=`rgba(${p.r},${p.g2},${p.b},${p.life*.75})`;g.lineWidth=1.3;g.stroke();
-    g.beginPath();g.arc(p.x,p.y,1.3,0,Math.PI*2);
-    g.fillStyle=`rgba(${p.r},${p.g2},${p.b},${p.life})`;g.fill();
-  });
-  // Magnetosphere — compressed when radiation high
-  const magR=Math.max(20,38-rN*8);
-  const mg=g.createRadialGradient(cx,cy,18,cx,cy,magR+14);
-  const mc=rN>1.5?`rgba(255,80,30,`:`rgba(0,160,255,`;
-  mg.addColorStop(0,mc+'0)');mg.addColorStop(.7,mc+((.06+rN*.04)+')'));mg.addColorStop(1,mc+'0)');
-  g.beginPath();g.arc(cx,cy,magR+14,0,Math.PI*2);g.fillStyle=mg;g.fill();
-  // Aurora ring (visible when rad>1)
-  if(rN>1.1){
-    const aR=20; const aA=Math.min(.8,(rN-1)*1.2);
-    for(let i=0;i<12;i++){
-      const a=mT*.05+i*(Math.PI*2/12);
-      const ax=cx+Math.cos(a)*aR, ay=cy+Math.sin(a)*aR;
-      g.beginPath();g.arc(ax,ay,2.5,0,Math.PI*2);
-      g.fillStyle=rN>1.8?`rgba(255,120,40,${aA})`:`rgba(80,255,160,${aA*.7})`;g.fill();
-    }
-  }
-  // Planet
-  const heat=Math.max(0,rN-1);
-  const pc=new THREE.Color(bd?.col||0x4488ff);
-  const pr=Math.min(1,pc.r+heat*.4),pg=Math.max(0,pc.g-heat*.2),pb=Math.max(0,pc.b-heat*.3);
-  const pgg=g.createRadialGradient(cx-5,cy-5,1,cx,cy,18);
-  pgg.addColorStop(0,'rgba(255,255,255,.8)');
-  pgg.addColorStop(.3,`rgb(${Math.round(pr*255)},${Math.round(pg*255)},${Math.round(pb*255)})`);
-  pgg.addColorStop(1,`rgb(${Math.round(pr*80)},${Math.round(pg*50)},${Math.round(pb*60)})`);
-  g.beginPath();g.arc(cx,cy,18,0,Math.PI*2);g.fillStyle=pgg;g.fill();
-  // Temp label
-  const teff=Math.round((bd?.baseT||0)+(rN-1)*80);
-  g.font="8px 'Share Tech Mono'";g.fillStyle=rN>1.5?'rgba(255,120,40,.7)':'rgba(0,200,255,.5)';
-  g.textAlign='left';g.fillText(`복사×${rN.toFixed(2)}  T:${teff>0?'+':''}${teff}°C`,4,H-4);
+function ms(ss,bd){
+  const g=gmc2('s');if(!g)return;const W=g.canvas.width,H=g.canvas.height,cx=W/2,cy=H/2;
+  g.fillStyle='rgba(0,1,10,.2)';g.fillRect(0,0,W,H);
+  const rN=ss.rad||1,ht=Math.max(0,rN-1);
+  for(let i=0;i<Math.ceil(rN*7);i++) MP.solar.push({x:-3,y:Math.random()*H,vx:2.8+rN*3.2,vy:(Math.random()-.5)*.85,life:1,r:rN>1.8?255:rN>1.2?215:75,g2:rN>1.8?55:rN>1.2?115:158,b:rN>1.5?14:205});
+  MP.solar=MP.solar.filter(p=>p.life>0);
+  MP.solar.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.012;if(p.x>W||p.y<0||p.y>H||Math.hypot(p.x-cx,p.y-cy)<17){p.life=0;return;}
+    g.beginPath();g.moveTo(p.x-p.vx*5,p.y);g.lineTo(p.x,p.y);g.strokeStyle=`rgba(${p.r},${p.g2},${p.b},${p.life*.72})`;g.lineWidth=1.3;g.stroke();
+    g.beginPath();g.arc(p.x,p.y,1.4,0,Math.PI*2);g.fillStyle=`rgba(${p.r},${p.g2},${p.b},${p.life})`;g.fill();});
+  const magR=Math.max(19,36-rN*9);const mg=g.createRadialGradient(cx,cy,17,cx,cy,magR+13);
+  const mc=(rN>1.5)?'rgba(255,80,28,':'rgba(0,160,255,';
+  mg.addColorStop(0,mc+'0)');mg.addColorStop(.7,mc+(.06+rN*.045)+')');mg.addColorStop(1,mc+'0)');
+  g.beginPath();g.arc(cx,cy,magR+13,0,Math.PI*2);g.fillStyle=mg;g.fill();
+  if(rN>1.1){const aA=Math.min(.88,(rN-1)*1.3);for(let i=0;i<14;i++){const a=mT*.05+i*(Math.PI*2/14);const ax=cx+Math.cos(a)*19,ay=cy+Math.sin(a)*19;g.beginPath();g.arc(ax,ay,2.8,0,Math.PI*2);g.fillStyle=rN>1.8?`rgba(255,112,36,${aA})`:`rgba(72,255,155,${aA*.75})`;g.fill();}}
+  const pc=new THREE.Color(bd?.col||0x4488ff);const pr=Math.min(1,pc.r+ht*.42),pgv=Math.max(0,pc.g-ht*.22),pb=Math.max(0,pc.b-ht*.32);
+  const pgg=g.createRadialGradient(cx-5,cy-5,1,cx,cy,17);pgg.addColorStop(0,'rgba(255,255,255,.8)');pgg.addColorStop(.28,`rgb(${Math.round(pr*255)},${Math.round(pgv*255)},${Math.round(pb*255)})`);pgg.addColorStop(1,`rgb(${Math.round(pr*78)},${Math.round(pgv*48)},${Math.round(pb*52)})`);
+  g.beginPath();g.arc(cx,cy,17,0,Math.PI*2);g.fillStyle=pgg;g.fill();
+  const te=Math.round((bd?.baseT||0)+(rN-1)*82);g.font="8px 'Share Tech Mono'";g.fillStyle=rN>1.5?'rgba(255,110,38,.72)':'rgba(0,200,255,.52)';g.textAlign='left';g.fillText(`×${rN.toFixed(2)}  T:${te>0?'+':''}${te}°C`,4,H-4);
 }
-
-function drawMGrav(ss,bd){
-  const g=getMC('g');if(!g)return;
-  const W=g.canvas.width,H=g.canvas.height,cx=W*.38,cy=H/2;
-  g.fillStyle='rgba(0,1,8,.22)';g.fillRect(0,0,W,H);
-  const gN=ss.grav;
-  const M=bd?.mass||1e24,R=bd?.radius||1e6;
-  const gv=G*M*gN/(R*R);
-  const ev=escV(M,R,gN)/1e3;
-  // Field lines
-  const nL=3+Math.round(gN*2);
-  for(let i=0;i<nL;i++){
-    const a=mT*.008+i*(Math.PI*2/nL);
-    const rx=48+gN*18,ry=28+gN*10;
-    g.beginPath();g.ellipse(cx,cy,rx,ry,a,0,Math.PI*2);
-    g.strokeStyle=`rgba(140,60,255,${.08+gN*.07})`;g.lineWidth=1;g.stroke();
-  }
-  // Tidal stretch
-  const stR=1+Math.max(0,gN-1)*.1;
-  g.save();g.translate(cx,cy);g.scale(stR,1/stR);
-  const pgg=g.createRadialGradient(-5,-5,1,0,0,19);
-  pgg.addColorStop(0,'#aaeeff');pgg.addColorStop(1,'#223388');
-  g.beginPath();g.arc(0,0,19,0,Math.PI*2);g.fillStyle=pgg;g.fill();
-  g.restore();
-  // Orbiting moon
-  const mR=44+gN*9,mA=mT*.022;
-  g.beginPath();g.arc(cx+Math.cos(mA)*mR,cy+Math.sin(mA)*mR*.45,5,0,Math.PI*2);
-  g.fillStyle='rgba(180,200,255,.9)';g.fill();
-  // External planet (gravity source) if gN>1.2
-  if(gN>1.1){
-    const epX=W*.83,epY=cy;
-    g.beginPath();g.arc(epX,epY,12+gN*4,0,Math.PI*2);
-    g.fillStyle=`rgba(255,150,50,${.45+gN*.2})`;g.fill();
-    g.setLineDash([4,5]);
-    g.beginPath();g.moveTo(epX-15,epY);g.lineTo(cx+21,cy);
-    g.strokeStyle=`rgba(255,150,50,${.3+gN*.2})`;g.lineWidth=1.5;g.stroke();
-    g.setLineDash([]);
-  }
-  g.font="8px 'Share Tech Mono'";g.fillStyle='rgba(140,60,255,.6)';g.textAlign='left';
-  g.fillText(`g=${gv.toFixed(2)}m/s²  v_esc=${ev.toFixed(2)}km/s`,4,H-4);
+function mg2(ss,bd){
+  const g=gmc2('g');if(!g)return;const W=g.canvas.width,H=g.canvas.height,cx=W*.37,cy=H/2;
+  g.fillStyle='rgba(0,1,10,.2)';g.fillRect(0,0,W,H);
+  const gN=ss.grav||1,M=bd?.mass||1e24,R=bd?.radius||1e6;
+  const gv2=(G*M*gN/(R*R)).toFixed(3),ev2=(escVel(M,R,gN)).toFixed(3);
+  const nL=3+Math.round(gN*2.2);
+  for(let i=0;i<nL;i++){const a=mT*.008+i*(Math.PI*2/nL);g.beginPath();g.ellipse(cx,cy,50+gN*20,30+gN*11,a,0,Math.PI*2);g.strokeStyle=`rgba(140,55,255,${.07+gN*.07})`;g.lineWidth=1;g.stroke();}
+  const st=1+Math.max(0,gN-1)*.1;g.save();g.translate(cx,cy);g.scale(st,1/st);const pgg=g.createRadialGradient(-5,-5,1,0,0,19);pgg.addColorStop(0,'#aaeeff');pgg.addColorStop(1,'#1a2888');g.beginPath();g.arc(0,0,19,0,Math.PI*2);g.fillStyle=pgg;g.fill();g.restore();
+  const mR=46+gN*10,ma=mT*.022;g.beginPath();g.arc(cx+Math.cos(ma)*mR,cy+Math.sin(ma)*mR*.42,5,0,Math.PI*2);g.fillStyle='rgba(180,205,255,.9)';g.fill();
+  if(gN>1.1){const ex=W*.83,ey=cy;g.beginPath();g.arc(ex,ey,13+gN*5,0,Math.PI*2);g.fillStyle=`rgba(255,152,52,${.4+gN*.22})`;g.fill();g.setLineDash([4,5]);g.beginPath();g.moveTo(ex-16,ey);g.lineTo(cx+21,cy);g.strokeStyle=`rgba(255,152,52,${.28+gN*.22})`;g.lineWidth=1.5+gN*.5;g.stroke();g.setLineDash([]);}
+  g.font="8px 'Share Tech Mono'";g.fillStyle='rgba(140,55,255,.62)';g.textAlign='left';g.fillText(`g=${gv2}m/s²  v_esc=${ev2}km/s`,4,H-4);
 }
-
-function drawMImpact(ss,bd){
-  const g=getMC('i');if(!g)return;
-  const W=g.canvas.width,H=g.canvas.height,cx=W/2,cy=H/2;
-  g.fillStyle='rgba(0,1,8,.22)';g.fillRect(0,0,W,H);
-  const aN=ss.atm;
-  const shR=20+aN*24;
-  // Atmo shield
-  if(aN>.08){
-    const sg=g.createRadialGradient(cx,cy,20,cx,cy,shR+8);
-    const aC=bd?.id==='venus'?`rgba(240,200,80,`:`rgba(80,180,255,`;
-    sg.addColorStop(0,aC+'0)');sg.addColorStop(1,aC+(aN*.2)+')');
-    g.beginPath();g.arc(cx,cy,shR+8,0,Math.PI*2);g.fillStyle=sg;g.fill();
-  }
-  // spawn asteroid
-  const ivl=Math.max(18,110-aN*80);
-  if(mT%Math.round(ivl)===0){
-    const ang=Math.random()*Math.PI*2;const spd=1.8+Math.random()*2;
-    mParts.impact.push({x:cx+Math.cos(ang)*150,y:cy+Math.sin(ang)*90,vx:-Math.cos(ang)*spd,vy:-Math.sin(ang)*spd*.6,life:1,size:3+aN*.5,exp:false,burn:false});
-  }
-  mParts.impact=mParts.impact.filter(p=>p.life>0);
-  mParts.impact.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;p.life-=.015;
-    const d=Math.hypot(p.x-cx,p.y-cy);
-    if(d<shR+5&&!p.exp&&!p.burn){
-      if(aN>.35&&Math.random()<aN*.95){
-        p.burn=true;p.life=0;
-        for(let i=0;i<8;i++) mParts.impact.push({x:p.x,y:p.y,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*3,life:.5,size:1.5,exp:true,burn:true,flame:true});
-        return;
-      }
-    }
-    if(d<22&&!p.exp){
-      p.exp=true;p.life=0;
-      for(let i=0;i<25+Math.round(aN*10);i++){
-        const ea=Math.random()*Math.PI*2,es=2+Math.random()*5;
-        mParts.impact.push({x:p.x,y:p.y,vx:Math.cos(ea)*es,vy:Math.sin(ea)*es*.5,life:.9,size:2,exp:true,burn:false});
-      }
-    }
-    const fc=p.flame?`rgba(255,200,50,${p.life})`:`rgba(${p.exp?'255,120,40':'180,150,120'},${p.life*.8})`;
-    g.beginPath();g.arc(p.x,p.y,p.size,0,Math.PI*2);g.fillStyle=fc;g.fill();
-  });
-  // Planet
-  const pc=new THREE.Color(bd?.col||0x4488ff);
-  const pgg=g.createRadialGradient(cx-5,cy-5,1,cx,cy,20);
-  pgg.addColorStop(0,'rgba(255,255,255,.7)');
-  pgg.addColorStop(1,`rgb(${Math.round(pc.r*200)},${Math.round(pc.g*180)},${Math.round(pc.b*180)})`);
-  g.beginPath();g.arc(cx,cy,20,0,Math.PI*2);g.fillStyle=pgg;g.fill();
-  g.font="8px 'Share Tech Mono'";g.fillStyle='rgba(255,100,40,.6)';g.textAlign='left';
-  g.fillText(`대기밀도:${Math.round(aN*100)}%  방어:${Math.round(aN*92)}%`,4,H-4);
+function mi(ss,bd){
+  const g=gmc2('i');if(!g)return;const W=g.canvas.width,H=g.canvas.height,cx=W/2,cy=H/2;
+  g.fillStyle='rgba(0,1,10,.2)';g.fillRect(0,0,W,H);
+  const aN=ss.atm||0,shR=20+aN*24;
+  if(aN>.06){const sg=g.createRadialGradient(cx,cy,20,cx,cy,shR+9);const ac=bd?.id==='venus'?'rgba(240,200,75,':'rgba(75,178,255,';sg.addColorStop(0,ac+'0)');sg.addColorStop(1,ac+(aN*.22)+')');g.beginPath();g.arc(cx,cy,shR+9,0,Math.PI*2);g.fillStyle=sg;g.fill();}
+  const ivl=Math.max(16,108-aN*82);
+  if(mT%Math.round(ivl)===0){const ang=Math.random()*Math.PI*2,sp=1.9+Math.random()*2.2;MP.impact.push({x:cx+Math.cos(ang)*148,y:cy+Math.sin(ang)*88,vx:-Math.cos(ang)*sp,vy:-Math.sin(ang)*sp*.58,life:1,sz:3,exp:false,burn:false});}
+  MP.impact=MP.impact.filter(p=>p.life>0);
+  MP.impact.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.014;const d=Math.hypot(p.x-cx,p.y-cy);
+    if(d<shR+4&&!p.exp&&!p.burn&&aN>.32&&Math.random()<aN*.95){p.burn=true;p.life=0;for(let i=0;i<9;i++)MP.impact.push({x:p.x,y:p.y,vx:(Math.random()-.5)*5.5,vy:(Math.random()-.5)*3,life:.48,sz:1.5,exp:true,burn:true});return;}
+    if(d<21&&!p.exp){p.exp=true;p.life=0;for(let i=0;i<22+Math.round(aN*12);i++){const ea=Math.random()*Math.PI*2,es=2.2+Math.random()*5;MP.impact.push({x:p.x,y:p.y,vx:Math.cos(ea)*es,vy:Math.sin(ea)*es*.52,life:.88,sz:1.9,exp:true,burn:false});}}
+    g.beginPath();g.arc(p.x,p.y,p.sz,0,Math.PI*2);g.fillStyle=p.burn?`rgba(255,198,48,${p.life})`:`rgba(${p.exp?'255,118,38':'175,148,115'},${p.life*.82})`;g.fill();});
+  const pc=new THREE.Color(bd?.col||0x4488ff);const pgg=g.createRadialGradient(cx-5,cy-5,1,cx,cy,20);pgg.addColorStop(0,'rgba(255,255,255,.72)');pgg.addColorStop(1,`rgb(${Math.round(pc.r*195)},${Math.round(pc.g*175)},${Math.round(pc.b*175)})`);g.beginPath();g.arc(cx,cy,20,0,Math.PI*2);g.fillStyle=pgg;g.fill();
+  g.font="8px 'Share Tech Mono'";g.fillStyle='rgba(255,98,38,.62)';g.textAlign='left';g.fillText(`밀도:${Math.round(aN*100)}%  방어:${Math.round(aN*93)}%`,4,H-4);
 }
-
-function drawMTidal(ss,bd){
-  const g=getMC('t');if(!g)return;
-  const W=g.canvas.width,H=g.canvas.height,jcx=W*.23,jcy=H*.5,ecx=W*.7,ecy=H*.5;
-  g.fillStyle='rgba(0,1,8,.22)';g.fillRect(0,0,W,H);
-  const gN=ss.grav||1;
-  const tf=tidalF(1.898e27*gN,bd?.mass||4.8e22,6.71e8,bd?.radius||1.56e6);
-  const th=(bd?.tidalHeat||83.5e9)*gN;
-  // Jupiter
-  const jgg=g.createRadialGradient(jcx-5,jcy-5,2,jcx,jcy,22);
-  jgg.addColorStop(0,'#ffe');jgg.addColorStop(.4,'#c89860');jgg.addColorStop(1,'#6a4020');
-  g.beginPath();g.arc(jcx,jcy,22,0,Math.PI*2);g.fillStyle=jgg;g.fill();
-  // Tidal arrows
-  const tS=Math.min(28,(tf/1e18)*gN*25);
-  g.strokeStyle='rgba(255,100,50,.75)';g.lineWidth=2;
-  // stretch (horizontal)
-  [[ecx-14,ecy,ecx-14-tS,ecy],[ecx+14,ecy,ecx+14+tS,ecy]].forEach(([x1,y1,x2,y2])=>{
-    g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
-    const aDir=x2>x1?1:-1;
-    g.beginPath();g.moveTo(x2,y2);g.lineTo(x2-aDir*5,y2-3);g.moveTo(x2,y2);g.lineTo(x2-aDir*5,y2+3);g.stroke();
-  });
-  // compress (vertical)
-  g.strokeStyle='rgba(50,160,255,.7)';
-  [[ecx,ecy-14,ecx,ecy-14+tS*.6],[ecx,ecy+14,ecx,ecy+14-tS*.6]].forEach(([x1,y1,x2,y2])=>{
-    g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
-  });
-  // Europa (deformed ellipse)
-  const str=1+gN*.05; const pulse=1+Math.sin(mT*.12)*.04*gN;
-  g.save();g.translate(ecx,ecy);g.scale(str*pulse,pulse/str);
-  const egg=g.createRadialGradient(-3,-3,1,0,0,13);
-  egg.addColorStop(0,'#ffffff');egg.addColorStop(.5,'#aac8e8');egg.addColorStop(1,'#334466');
-  g.beginPath();g.arc(0,0,13,0,Math.PI*2);g.fillStyle=egg;g.fill();
-  // Ice cracks (more intense with high gravity)
-  g.strokeStyle=`rgba(255,150,100,${.15+gN*.2})`;g.lineWidth=.9;
-  [[-9,2,9,-2],[-5,-8,5,8],[-8,-5,8,5]].forEach(([x1,y1,x2,y2])=>{g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();});
-  g.restore();
-  // Internal heat glow
-  const heatA=Math.min(.55,gN*.22);
-  const hgg=g.createRadialGradient(ecx,ecy,0,ecx,ecy,14);
-  hgg.addColorStop(0,`rgba(255,90,0,${heatA})`);hgg.addColorStop(1,'rgba(255,90,0,0)');
-  g.beginPath();g.arc(ecx,ecy,14,0,Math.PI*2);g.fillStyle=hgg;g.fill();
-  // Connecting line
-  g.setLineDash([3,5]);g.strokeStyle='rgba(255,165,0,.22)';g.lineWidth=1;
-  g.beginPath();g.moveTo(jcx+24,jcy);g.lineTo(ecx-15,ecy);g.stroke();g.setLineDash([]);
-  g.font="8px 'Share Tech Mono'";g.fillStyle='rgba(255,165,0,.55)';g.textAlign='left';
-  g.fillText(`ΔF:${(tf/1e18).toFixed(2)}×10¹⁸N  열:${(th/1e9).toFixed(0)}GW`,4,H-4);
+function mt2(ss,bd){
+  const g=gmc2('t');if(!g)return;const W=g.canvas.width,H=g.canvas.height,jx=W*.24,jy=H*.5,ex=W*.7,ey=H*.5;
+  g.fillStyle='rgba(0,1,10,.2)';g.fillRect(0,0,W,H);
+  const gN=ss.grav||1,tf=tidalF(1.898e27*gN,bd.mass||4.8e22,6.71e8,bd.radius||1.56e6),th=(bd.tidalHeat||83.5e9)*gN;
+  const jg=g.createRadialGradient(jx-4,jy-4,2,jx,jy,22);jg.addColorStop(0,'#fff5d0');jg.addColorStop(.38,'#c89860');jg.addColorStop(1,'#6a4020');g.beginPath();g.arc(jx,jy,22,0,Math.PI*2);g.fillStyle=jg;g.fill();
+  const tS=Math.min(26,tf/1e18*gN*22);g.strokeStyle='rgba(255,95,45,.75)';g.lineWidth=2;
+  [[ex-13,ey,ex-13-tS,ey],[ex+13,ey,ex+13+tS,ey]].forEach(([x1,y1,x2,y2])=>{g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const d=x2>x1?1:-1;g.beginPath();g.moveTo(x2,y2);g.lineTo(x2-d*5,y2-3);g.moveTo(x2,y2);g.lineTo(x2-d*5,y2+3);g.stroke();});
+  g.strokeStyle='rgba(45,155,255,.68)';[[ex,ey-13,ex,ey-13+tS*.55],[ex,ey+13,ex,ey+13-tS*.55]].forEach(([x1,y1,x2,y2])=>{g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();});
+  const str=1+gN*.055,pulse=1+Math.sin(mT*.12)*.04*gN;g.save();g.translate(ex,ey);g.scale(str*pulse,pulse/str);
+  const egg=g.createRadialGradient(-3,-3,1,0,0,12);egg.addColorStop(0,'#ffffff');egg.addColorStop(.5,'#aac8e8');egg.addColorStop(1,'#2a3d58');
+  g.beginPath();g.arc(0,0,12,0,Math.PI*2);g.fillStyle=egg;g.fill();
+  g.strokeStyle=`rgba(255,148,95,${.14+gN*.22})`;g.lineWidth=.9;[[-8,1,8,-1],[-4,-7,4,7],[-7,-4,7,4]].forEach(([x1,y1,x2,y2])=>{g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();});g.restore();
+  const hA=Math.min(.52,gN*.24);const hg=g.createRadialGradient(ex,ey,0,ex,ey,13);hg.addColorStop(0,`rgba(255,85,0,${hA})`);hg.addColorStop(1,'rgba(255,85,0,0)');g.beginPath();g.arc(ex,ey,13,0,Math.PI*2);g.fillStyle=hg;g.fill();
+  g.setLineDash([3,5]);g.strokeStyle='rgba(255,165,0,.2)';g.lineWidth=1;g.beginPath();g.moveTo(jx+23,jy);g.lineTo(ex-14,ey);g.stroke();g.setLineDash([]);
+  g.font="8px 'Share Tech Mono'";g.fillStyle='rgba(255,165,0,.58)';g.textAlign='left';g.fillText(`ΔF:${(tf/1e18).toFixed(2)}×10¹⁸N  열:${(th/1e9).toFixed(0)}GW`,4,H-4);
 }
 
 // ═══════════════════════════════════════════════════
-//  INTERACTION
+//  PLANET LIST (build DOM)
+// ═══════════════════════════════════════════════════
+function buildPlanetList(){
+  const lb=document.getElementById('plbody');
+  let html='';
+  BODIES.forEach(pl=>{
+    const col=`#${new THREE.Color(pl.col).getHexString()}`;
+    html+=`<div class="pl-item" data-bid="${pl.id}" onclick="lockOn('${pl.id}')">
+      <div class="pl-dot" style="background:${col};box-shadow:0 0 5px ${col}60"></div>
+      <div class="pl-info">
+        <div class="pl-name">${pl.emoji} ${pl.name}</div>
+        <div class="pl-sub2">${pl.en} · ${pl.a.toFixed(2)} AU</div>
+      </div>
+    </div>`;
+    if(pl.moons.length){
+      pl.moons.forEach(m=>{
+        const mc=`#${new THREE.Color(m.col).getHexString()}`;
+        html+=`<div class="pl-item pl-moon" data-bid="${m.id}" onclick="lockOn('${m.id}')">
+          <div class="pl-dot" style="background:${mc};width:6px;height:6px"></div>
+          <div class="pl-info">
+            <div class="pl-name">${m.name}</div>
+            <div class="pl-sub2">${m.en}${m.T<0?' ↺':''}</div>
+          </div>
+        </div>`;
+      });
+    }
+  });
+  lb.innerHTML=html;
+}
+buildPlanetList();
+
+// ═══════════════════════════════════════════════════
+//  MOUSE / KEYBOARD
 // ═══════════════════════════════════════════════════
 const tip=document.getElementById('tip');
-let mdPos={x:0,y:0},dragged=false;
+const ray=new THREE.Raycaster();
+const m2v=new THREE.Vector2();
+let mdp={x:0,y:0},dragged=false;
 
-function getAllMeshes(){
-  return[...Object.values(pMesh),...Object.values(mMesh),sunMesh];
-}
-function getRayHit(ex,ey){
-  const rect=cv.getBoundingClientRect();
-  mouse2.x=((ex-rect.left)/rect.width)*2-1;
-  mouse2.y=-((ey-rect.top)/rect.height)*2+1;
-  raycaster.setFromCamera(mouse2,camera);
-  const hits=raycaster.intersectObjects(getAllMeshes(),false);
+function getAllMeshes(){return[...Object.values(P_MESH),...Object.values(M_MESH)];}
+function getHit(ex,ey){
+  const rc=cv.getBoundingClientRect();
+  m2v.x=((ex-rc.left)/rc.width)*2-1;m2v.y=-((ey-rc.top)/rc.height)*2+1;
+  ray.setFromCamera(m2v,camera);
+  const hits=ray.intersectObjects(getAllMeshes(),false);
   return hits.length>0&&hits[0].object.userData.bid?hits[0]:null;
 }
 
 cv.addEventListener('mousemove',e=>{
-  const hit=getRayHit(e.clientX,e.clientY);
-  if(hit){
-    cv.style.cursor='pointer';
-    tip.style.opacity='1';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-8)+'px';
-    const bid=hit.object.userData.bid;
-    const bd=getBodyData(bid);
-    tip.innerHTML=`<b>${bd?.name||bid} ${bd?.en||''}</b><br><span style="opacity:.6">클릭 → 시뮬레이션</span>`;
-  } else {cv.style.cursor='grab';tip.style.opacity='0';}
-  if(oc.drag&&!ct.active){
-    const dx=(e.clientX-oc.lx)*.006,dy=(e.clientY-oc.ly)*.006;
-    oc.sph.theta-=dx;oc.sph.phi-=dy;
-    oc.lx=e.clientX;oc.ly=e.clientY;dragged=true;
+  const hit=getHit(e.clientX,e.clientY);
+  if(hit&&!cam.dragging){
+    cv.style.cursor='pointer';tip.style.opacity='1';
+    tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-8)+'px';
+    const bd=ALL_BODIES[hit.object.userData.bid];
+    tip.innerHTML=`<b>${bd?.name||''}</b> ${bd?.en||''}<br><span style="opacity:.5;font-size:.52rem">클릭 → Lock-On 추적</span>`;
+  } else {cv.style.cursor=cam.dragging?'grabbing':'grab';tip.style.opacity='0';}
+  if(cam.dragging){
+    const dx=(e.clientX-cam.lastX)*.0052,dy=(e.clientY-cam.lastY)*.0052;
+    cam.theta-=dx;cam.phi-=dy;
+    cam.lastX=e.clientX;cam.lastY=e.clientY;dragged=true;
   }
 });
 cv.addEventListener('mousedown',e=>{
-  oc.drag=true;oc.lx=e.clientX;oc.ly=e.clientY;
-  mdPos={x:e.clientX,y:e.clientY};dragged=false;
+  cam.dragging=true;cam.lastX=e.clientX;cam.lastY=e.clientY;
+  mdp={x:e.clientX,y:e.clientY};dragged=false;
 });
 cv.addEventListener('mouseup',e=>{
-  oc.drag=false;
-  if(!dragged&&Math.hypot(e.clientX-mdPos.x,e.clientY-mdPos.y)<5){
-    const hit=getRayHit(e.clientX,e.clientY);
-    if(hit){
-      const bid=hit.object.userData.bid;
-      const mesh=hit.object;
-      const isBig=bid==='jupiter'||bid==='saturn';
-      const dist=isBig?45:bid==='uranus'||bid==='neptune'?30:bid==='sun'?20:
-                  Object.values(MOONS_DATA).flat().find(m=>m.id===bid)?8:18;
-      camFocus(mesh.position.clone(),dist);
-      openSB(bid);
-      const fl=document.getElementById('focus-lbl');
-      fl.textContent=(getBodyData(bid)?.en||bid).toUpperCase();
-      fl.classList.add('on');setTimeout(()=>fl.classList.remove('on'),2500);
-    } else closeSB();
+  cam.dragging=false;
+  if(!dragged&&Math.hypot(e.clientX-mdp.x,e.clientY-mdp.y)<5){
+    const hit=getHit(e.clientX,e.clientY);
+    if(hit){lockOn(hit.object.userData.bid);}
+    else if(!e.target.closest('#plist')&&!e.target.closest('#simpanel')&&!e.target.closest('#livepanel')){
+      // click empty canvas → release
+      releaseLock();closeSP();
+    }
   }
 });
-cv.addEventListener('wheel',e=>{e.preventDefault();oc.sph.radius*=e.deltaY>0?1.1:.9;},{passive:false});
+cv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  // Zoom centered on locked body (or camera target)
+  cam.radius*=e.deltaY>0?1.1:.9;
+  cam.radius=Math.max(cam.minR,Math.min(cam.maxR,cam.radius));
+},{passive:false});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){releaseLock();closeSP();}
+});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
 
-function clickMoon(mid){
-  const mm=mMesh[mid]; if(!mm)return;
-  camFocus(mm.position.clone(),8);
-  openSB(mid);
-  const fl=document.getElementById('focus-lbl');
-  fl.textContent=(getBodyData(mid)?.en||mid).toUpperCase();
-  fl.classList.add('on');setTimeout(()=>fl.classList.remove('on'),2500);
+// ── HELP TOGGLE ──
+let helpVisible=true;
+function toggleHelp(){
+  helpVisible=!helpVisible;
+  document.getElementById('help').classList.toggle('help-hidden',!helpVisible);
+  document.getElementById('help-toggle').textContent=helpVisible?'✕ 도움말':'? 도움말';
 }
+// ═══════════════════════════════════════════════════
+(function buildIntroStars(){
+  const c=document.getElementById('istars');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    const sz=Math.random()*2.5+.5;
+    s.className='intro-star';
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;
+      opacity:${Math.random()};--d:${2+Math.random()*4}s;--del:${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+})();
+
+function startExplore(){
+  const intro=document.getElementById('intro');
+  intro.classList.add('hidden');
+  setTimeout(()=>intro.style.display='none',900);
+}
+function openEncyc(){
+  document.getElementById('encyc').classList.add('on');
+}
+function closeEncyc(){
+  document.getElementById('encyc').classList.remove('on');
+}
+
+// ═══════════════════════════════════════════════════
+//  ENCYCLOPEDIA DATA (풍부한 과학 설명)
+// ═══════════════════════════════════════════════════
+const ENC_DATA={
+  mercury:{
+    overview:`수성은 태양계에서 가장 작고 태양과 가장 가까운 행성입니다. 태양으로부터 평균 5,791만 km 거리에 있으며, 고작 87.97일마다 태양을 한 바퀴 공전합니다. 대기가 거의 없어 낮에는 +430°C, 밤에는 -180°C까지 급변하는 극단적인 온도 환경을 가집니다.`,
+    facts:[
+      {l:'반경',v:'2,439.7',u:'km'},{l:'질량',v:'3.285×10²³',u:'kg'},
+      {l:'공전주기',v:'87.97',u:'일'},{l:'자전주기',v:'58.65',u:'일'},
+      {l:'표면 중력',v:'3.70',u:'m/s²'},{l:'평균 온도',v:'167',u:'°C'},
+    ],
+    sections:[
+      {title:'지질 및 내부 구조',icon:'🪨',
+       text:'수성의 철-니켈 핵은 전체 부피의 약 42%를 차지합니다(지구는 17%). 이는 태양계 행성 중 가장 높은 핵 비율입니다. 핵이 크고 맨틀이 얇은 이유는 초기 태양계에서 대형 충돌로 외각 물질이 날아간 결과로 추정됩니다.'},
+      {title:'칼로리스 분지',icon:'💥',
+       text:'수성 표면에서 가장 눈에 띄는 지형은 칼로리스 분지(Caloris Basin)로, 지름이 약 1,550km에 달하는 거대한 충돌 분지입니다. 약 40억 년 전 소행성 충돌로 생성됐으며, 충격파가 행성 반대편 지면을 찌그러뜨려 "혼돈 지형"을 만들었습니다.'},
+      {title:'조석 공명',icon:'🔄',
+       text:'수성은 3:2 스핀-궤도 공명 상태에 있습니다. 태양을 2바퀴 공전하는 동안 정확히 3번 자전합니다. 과거에는 수성이 동주기 자전(달처럼 항상 같은 면)이라 여겼지만, 1965년 레이더 관측으로 3:2 공명임이 밝혀졌습니다.'},
+      {title:'탐사 역사',icon:'🛸',
+       text:'1974~75년 매리너 10호가 최초 근접 비행. 2004~2015년 NASA 메신저(MESSENGER) 탐사선이 최초로 수성 궤도에 진입하여 표면 전체 지도를 작성했습니다. 2018년 발사된 BepiColombo(ESA·JAXA 공동)가 2025년 수성 궤도 진입 예정입니다.'},
+    ],
+    tags:[{t:'암석형 행성',cls:'b'},{t:'대기 없음',cls:'r'},{t:'철 핵 42%',cls:'w'},{t:'3:2 조석 공명',cls:'g'}]
+  },
+  venus:{
+    overview:`금성은 크기와 질량이 지구와 매우 유사하여 "지구의 쌍둥이"라 불리지만, 극단적인 온실효과로 태양계에서 가장 뜨거운 행성입니다(464°C). 두꺼운 이산화탄소 대기와 황산 구름이 태양열을 가두어 수성보다도 뜨겁습니다.`,
+    facts:[
+      {l:'반경',v:'6,051.8',u:'km'},{l:'질량',v:'4.867×10²⁴',u:'kg'},
+      {l:'공전주기',v:'224.7',u:'일'},{l:'자전주기',v:'-243.0',u:'일(역행)'},
+      {l:'표면 중력',v:'8.87',u:'m/s²'},{l:'표면 온도',v:'464',u:'°C'},
+    ],
+    sections:[
+      {title:'역방향 자전의 비밀',icon:'🔄',
+       text:'금성은 태양계에서 유일하게 역방향으로 자전합니다. 자전주기(-243일)가 공전주기(224.7일)보다 길어, 금성에서 보면 태양이 서쪽에서 뜨고 동쪽으로 집니다. 원인으로는 초기 대형 충돌설과 태양 조석력+대기 조석 공명의 복합 작용이 유력하게 제시됩니다.'},
+      {title:'극단적 온실효과',icon:'🌡',
+       text:'대기의 96.5%가 CO₂로 구성되어 강력한 온실효과를 일으킵니다. 표면 기압은 92bar(지구의 92배)로, 수심 900m 바닷속과 같은 압력입니다. 황산(H₂SO₄) 구름이 45~70km 고도에 형성되어 태양빛의 70%를 반사합니다.'},
+      {title:'화산 활동',icon:'🌋',
+       text:'표면에 1,600개 이상의 주요 화산이 있습니다. 가장 큰 마아트 몬스(Maat Mons)는 높이 8km에 달합니다. 2023년 마젤란 탐사선의 레이더 데이터를 재분석한 결과, 금성에서 현재 활성 화산 활동이 확인되었습니다.'},
+      {title:'탐사 역사',icon:'🛸',
+       text:'소련의 베네라(Venera) 시리즈(1961~1984)가 금성 표면에 착륙하여 사진을 전송했습니다. NASA 마젤란은 1990~94년 레이더로 표면 전체를 매핑. 현재 NASA Veritas, ESA EnVision 탐사선이 2030년대 발사 예정입니다.'},
+    ],
+    tags:[{t:'지구 쌍둥이',cls:'b'},{t:'역행 자전',cls:'r'},{t:'464°C',cls:'r'},{t:'황산 구름',cls:'w'}]
+  },
+  mars:{
+    overview:`화성은 "붉은 행성"으로 불리며, 산화철(Fe₂O₃)이 표면에 풍부해 붉게 보입니다. 태양계에서 가장 높은 화산(올림포스 몬스, 21.9km)과 가장 긴 협곡(발레스 마리네리스, 4,000km)이 있습니다. 과거 액체 바다가 존재했다는 강력한 증거들이 있어 생명체 탐사의 주요 대상입니다.`,
+    facts:[
+      {l:'반경',v:'3,389.5',u:'km'},{l:'질량',v:'6.39×10²³',u:'kg'},
+      {l:'공전주기',v:'686.97',u:'일'},{l:'자전주기',v:'24.62',u:'시간'},
+      {l:'표면 중력',v:'3.72',u:'m/s²'},{l:'평균 온도',v:'-65',u:'°C'},
+    ],
+    sections:[
+      {title:'올림포스 몬스',icon:'⛰',
+       text:'화성의 올림포스 몬스(Olympus Mons)는 태양계에서 가장 큰 화산으로, 높이 21.9km, 지름 600km에 달합니다. 에베레스트산의 약 2.5배 높이입니다. 화성은 판구조가 없어 마그마가 한 지점에 집중적으로 분출되어 이처럼 거대한 화산이 형성될 수 있었습니다.'},
+      {title:'과거 바다의 흔적',icon:'💧',
+       text:'화성 표면 곳곳에 강줄기·삼각주·해안선과 흡사한 지형이 존재합니다. NASA 퍼시비어런스 로버가 제제로 크레이터(Jezero Crater)에서 고대 강 삼각주 퇴적층을 발견했습니다. 약 30~40억 년 전 화성 북반구에 넓은 바다가 있었을 것으로 추정됩니다.'},
+      {title:'화성의 두 위성',icon:'🌑',
+       text:'포보스(Phobos)와 데이모스(Deimos)는 소행성이 포획된 것으로 추정됩니다. 포보스는 화성에 점점 가까워지고 있어 약 1억 년 후 로슈 한계 내로 진입, 고리로 분해될 것으로 예측됩니다.'},
+      {title:'탐사 현황',icon:'🛸',
+       text:'NASA 퍼시비어런스(2021~현재), 큐리오시티(2012~현재), 중국 주롱(2021) 등이 활동 중입니다. 드론 인저뉴어티는 화성 최초 동력 비행에 성공(2021). 2030년대 유인 화성 탐사가 목표입니다.'},
+    ],
+    tags:[{t:'붉은 행성',cls:'r'},{t:'최대 화산',cls:'w'},{t:'과거 바다',cls:'b'},{t:'2개 위성',cls:'g'}]
+  },
+  jupiter:{
+    overview:`목성은 태양계에서 가장 큰 행성으로, 지구 1,321개를 채울 수 있습니다. 태양계의 "진공청소기"로 불리며, 강력한 중력으로 소행성과 혜성을 끌어들여 지구를 보호합니다. 대적점은 300년 이상 지속 중인 거대 폭풍이며, 갈릴레이 위성 4개가 소형 태양계를 이룹니다.`,
+    facts:[
+      {l:'반경',v:'71,492',u:'km'},{l:'질량',v:'1.898×10²⁷',u:'kg'},
+      {l:'공전주기',v:'11.86',u:'년'},{l:'자전주기',v:'9.93',u:'시간'},
+      {l:'표면 중력',v:'24.79',u:'m/s²'},{l:'위성 수',v:'95',u:'개(공식)'},
+    ],
+    sections:[
+      {title:'대적점 (Great Red Spot)',icon:'🌀',
+       text:'대적점은 지름이 현재 약 16,350km인 거대 반시계 방향 폭풍입니다. 17세기부터 관측되어 300년 이상 지속 중이지만, 최근 수십 년간 크기가 줄어들고 있습니다. 1800년대에는 지름이 40,000km 이상이었습니다.'},
+      {title:'자기장과 방사선대',icon:'⚡',
+       text:'목성의 자기장은 지구의 약 20,000배로 태양계에서 가장 강합니다. 자기권 반경은 약 700만km로, 태양 방향으로는 토성 궤도 너머까지 뻗어 있습니다. 강력한 방사선대가 이오·에우로파 등 위성을 둘러싸고 있습니다.'},
+      {title:'갈릴레이 위성',icon:'🌑',
+       text:'1610년 갈릴레오 갈릴레이가 발견한 이오·에우로파·가니메데·칼리스토는 "소형 태양계"를 이룹니다. 이오는 태양계 최강 화산, 에우로파는 지하 액체 바다로 생명체 후보지, 가니메데는 태양계 최대 위성입니다.'},
+      {title:'목성의 역할',icon:'🛡',
+       text:'목성은 거대한 중력으로 태양계 외곽의 소행성과 혜성을 포획·편향시켜 지구를 보호합니다. 1994년 슈메이커-레비 혜성이 목성에 충돌하는 장면이 인류 최초로 목격됐습니다.'},
+    ],
+    tags:[{t:'최대 행성',cls:'b'},{t:'대적점 300년+',cls:'r'},{t:'95개 위성',cls:'g'},{t:'지구 방패',cls:'w'}]
+  },
+  saturn:{
+    overview:`토성은 고리 시스템으로 유명한 가스 거인입니다. 밀도가 0.687g/cm³로 물보다 가벼워, 충분히 큰 바다에 뜰 수 있는 태양계 유일의 행성입니다. 274개의 위성을 거느리며, 그 중 타이탄은 두꺼운 대기와 메탄 호수를 가진 독특한 세계입니다.`,
+    facts:[
+      {l:'반경',v:'58,232',u:'km'},{l:'질량',v:'5.683×10²⁶',u:'kg'},
+      {l:'공전주기',v:'29.46',u:'년'},{l:'자전주기',v:'10.7',u:'시간'},
+      {l:'밀도',v:'0.687',u:'g/cm³'},{l:'위성 수',v:'274',u:'개(2025)'},
+    ],
+    sections:[
+      {title:'고리 시스템',icon:'💍',
+       text:'토성 고리는 수십억 개의 얼음 입자(크기 mm~수 m)와 암석 파편으로 이루어져 있습니다. 가장 넓은 부분은 반경 282,000km에 달하지만 두께는 불과 10~1,000m입니다. 주요 고리는 A·B·C링이며, 중간의 카시니 간극(약 4,800km)이 두드러집니다.'},
+      {title:'북극 6각형 폭풍',icon:'⬡',
+       text:'토성 북극에는 정확한 정6각형 모양의 거대 폭풍이 있습니다. 각 변의 길이가 약 13,800km(지구 지름보다 큼)이며, 1980년대 보이저가 발견한 이후 수십 년째 유지되고 있습니다. 형성 원인은 대기 제트류의 파동으로 설명됩니다.'},
+      {title:'타이탄 — 특별한 위성',icon:'🟠',
+       text:'타이탄은 태양계에서 유일하게 두꺼운 대기를 가진 위성입니다(기압 1.45bar). 표면에 메탄으로 이루어진 강·호수·바다가 존재하며, 메탄이 물처럼 순환하는 "메탄 기상 시스템"이 작동합니다. 2005년 하위헌스 탐사선이 착륙에 성공했습니다.'},
+      {title:'엔켈라두스의 놀라운 발견',icon:'💦',
+       text:'2006년 카시니가 엔켈라두스 남극에서 수증기·얼음 입자·유기물을 내뿜는 간헐천을 발견했습니다. 이 분출물이 토성 E링의 주요 공급원입니다. 지하에 전구(全球)적 액체 바다가 존재하며, 열수 분출공도 확인되어 생명체 존재 가능성이 높습니다.'},
+    ],
+    tags:[{t:'274개 위성',cls:'b'},{t:'물보다 가벼움',cls:'w'},{t:'타이탄 메탄 기상',cls:'g'},{t:'엔켈라두스 바다',cls:'b'}]
+  },
+  uranus:{
+    overview:`천왕성은 자전축이 97.77°로 기울어져 있어 사실상 옆으로 누운 채 공전하는 특이한 행성입니다. 역방향 자전을 하며, 메탄이 적색광을 흡수하여 독특한 청록색을 띠는 "얼음 거인"입니다. 1781년 윌리엄 허셜이 망원경으로 발견한 최초의 행성입니다.`,
+    facts:[
+      {l:'반경',v:'25,559',u:'km'},{l:'질량',v:'8.681×10²⁵',u:'kg'},
+      {l:'공전주기',v:'84.01',u:'년'},{l:'자전주기',v:'-17.24',u:'시간(역행)'},
+      {l:'표면 중력',v:'8.69',u:'m/s²'},{l:'최저 온도',v:'-224',u:'°C'},
+    ],
+    sections:[
+      {title:'97.77° 자전축의 수수께끼',icon:'↕',
+       text:'천왕성은 거의 옆으로 드러누운 채 공전합니다. 이로 인해 극지방이 적도보다 태양에 더 많은 에너지를 받는 기이한 계절이 발생합니다. 한 극은 21년간 낮, 다른 극은 21년간 밤이 계속됩니다. 이 기울기는 약 40억 년 전 지구 질량 1~3배 천체와의 충돌 결과로 추정됩니다.'},
+      {title:'태양계에서 가장 추운 대기',icon:'🥶',
+       text:'천왕성의 최저 대기 온도는 -224°C로 태양계에서 가장 낮습니다. 해왕성보다 태양에 가까움에도 불구하고 더 추운 이유는 내부 잔열이 거의 방출되지 않기 때문입니다. 천왕성 내부에서 방출되는 열은 받는 태양에너지와 거의 같습니다.'},
+      {title:'고리와 위성',icon:'💍',
+       text:'1977년 별 통과 관측 중 발견된 고리 13개를 가지고 있습니다. 토성의 화려한 고리와 달리 좁고 어둡습니다. 5개의 주요 위성(미란다·아리엘·움브리엘·티타니아·오베론)은 모두 셰익스피어 작품 등장인물의 이름을 따 명명되었습니다.'},
+      {title:'미란다의 극단적 지형',icon:'⛰',
+       text:'미란다는 태양계에서 가장 극단적인 지형을 가진 천체입니다. 높이 20km의 수직 절벽 "베로나 루페스(Verona Rupes)"가 있어, 이 절벽에서 떨어진다면 12분이 넘도록 추락하게 됩니다. 여러 지각 파열의 흔적이 과거 강렬한 조석력을 시사합니다.'},
+    ],
+    tags:[{t:'97.77° 기울기',cls:'r'},{t:'역행 자전',cls:'r'},{t:'얼음 거인',cls:'b'},{t:'-224°C 최저',cls:'w'}]
+  },
+  neptune:{
+    overview:`해왕성은 수학으로 예측된 후 망원경으로 발견된 최초의 행성입니다(1846). 내부에서 받는 태양에너지의 약 2.61배를 스스로 방출하는 강력한 내부 열원을 가집니다. 태양계에서 가장 강한 바람(최대 2,100km/h)이 불며, 고압에서 "다이아몬드 비"가 내린다는 이론이 있습니다.`,
+    facts:[
+      {l:'반경',v:'24,764',u:'km'},{l:'질량',v:'1.024×10²⁶',u:'kg'},
+      {l:'공전주기',v:'164.8',u:'년'},{l:'자전주기',v:'16.11',u:'시간'},
+      {l:'표면 중력',v:'11.15',u:'m/s²'},{l:'최대 풍속',v:'2,100',u:'km/h'},
+    ],
+    sections:[
+      {title:'수학으로 발견된 행성',icon:'🔢',
+       text:'1845년 프랑스 수학자 르베리에와 영국의 애덤스가 천왕성 궤도 이상을 분석하여 새 행성의 위치를 수학적으로 예측했습니다. 1846년 9월 23일 베를린 천문대에서 예측 위치 1° 이내에서 해왕성이 발견되었습니다.'},
+      {title:'다이아몬드 비',icon:'💎',
+       text:'해왕성 내부의 극한 고압(약 200만 기압)·고온(6,700°C) 환경에서 탄소 원자가 압축되어 다이아몬드 결정이 형성, 내핵을 향해 가라앉는다는 이론이 있습니다. 2022년 실험실에서 이 현상이 시뮬레이션으로 재현되었습니다.'},
+      {title:'트리톤 — 역행 위성',icon:'🌑',
+       text:'트리톤은 태양계의 주요 위성 중 유일하게 역행 궤도(행성 자전 반대 방향)를 가집니다. 해왕성에 포획된 카이퍼 벨트 천체로 추정됩니다. 조석력으로 인해 궤도가 점점 줄어들고 있어 약 36억 년 후 로슈 한계 내로 진입하여 고리로 분해될 것입니다.'},
+      {title:'탐사 현황',icon:'🛸',
+       text:'1989년 보이저 2호가 유일하게 해왕성을 근접 통과했습니다. 대흑점(Great Dark Spot)을 발견했으나 이후 허블 관측에서 사라졌고 새로운 폭풍이 생겼음이 확인됐습니다. 현재 NASA에서 해왕성·트리톤 전용 탐사선 콘셉트가 검토 중입니다.'},
+    ],
+    tags:[{t:'수학으로 발견',cls:'b'},{t:'다이아몬드 비',cls:'w'},{t:'최강 풍속',cls:'r'},{t:'트리톤 역행',cls:'g'}]
+  },
+};
+
+// ── Build encyclopedia list ──
+(function buildEncList(){
+  const list=document.getElementById('enclist');
+  const planetsOnly=BODIES; // only planets in main list
+  let html='';
+  planetsOnly.forEach(pl=>{
+    const col=`#${new THREE.Color(pl.col).getHexString()}`;
+    html+=`<div class="enc-item" data-eid="${pl.id}" onclick="showEnc('${pl.id}')">
+      <div class="enc-dot" style="background:${col};box-shadow:0 0 5px ${col}60"></div>
+      <div>
+        <div class="enc-iname">${pl.emoji} ${pl.name}</div>
+        <div class="enc-ien">${pl.en}</div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML=html;
+})();
+
+function showEnc(pid){
+  const data=ENC_DATA[pid];
+  const bd=BODIES.find(p=>p.id===pid);
+  if(!data||!bd)return;
+
+  // Highlight list item
+  document.querySelectorAll('.enc-item').forEach(el=>el.classList.toggle('sel',el.dataset.eid===pid));
+
+  // Header
+  const col=`#${new THREE.Color(bd.col).getHexString()}`;
+  document.getElementById('encpname').textContent=`${bd.emoji} ${bd.name}`;
+  document.getElementById('encpname').style.color='#fff';
+  document.getElementById('encpen').textContent=bd.en.toUpperCase()+' — '+bd.a.toFixed(3)+' AU';
+
+  // Body
+  const body=document.getElementById('encbody');
+  let html=`
+    <div class="enc-section">
+      <div class="enc-sh">개요</div>
+      <div class="enc-txt">${data.overview}</div>
+    </div>
+    <div class="enc-section">
+      <div class="enc-sh">핵심 데이터</div>
+      <div class="enc-grid">
+        ${data.facts.map(f=>`<div class="enc-box">
+          <div class="enc-bl">${f.l}</div>
+          <div class="enc-bv">${f.v}</div>
+          <div class="enc-bu">${f.u}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+    ${data.sections.map(s=>`<div class="enc-section">
+      <div class="enc-sh">${s.icon} ${s.title}</div>
+      <div class="enc-txt">${s.text}</div>
+    </div>`).join('')}
+    <div class="enc-section">
+      <div class="enc-sh">키워드</div>
+      <div>${data.tags.map(t=>`<span class="enc-badge enc-badge-${t.cls}">${t.t}</span>`).join('')}</div>
+    </div>
+    <div style="margin-top:20px">
+      <button class="enc-go" onclick="closeEncycAndExplore('${pid}')">🚀 ${bd.name} 탐험하기</button>
+    </div>
+  `;
+  body.innerHTML=html;
+  body.scrollTop=0;
+}
+
+function closeEncycAndExplore(pid){
+  closeEncyc();
+  // If intro still showing, start exploration first
+  const intro=document.getElementById('intro');
+  if(!intro.classList.contains('hidden')){
+    intro.classList.add('hidden');
+    setTimeout(()=>{intro.style.display='none'; lockOn(pid);},900);
+  } else {
+    lockOn(pid);
+  }
+}
+
 </script>
 </body>
 </html>
